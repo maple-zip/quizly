@@ -208,6 +208,17 @@
             background: #4338ca;
         }
 
+        /* Mobile Submit Button */
+        .mobile-submit-container {
+            display: none;
+            padding: 20px 0;
+            margin-top: 30px;
+        }
+
+        .mobile-submit-container .btn-submit {
+            width: 100%;
+        }
+
         /* Sidebar */
         .sidebar {
             width: 280px;
@@ -803,6 +814,10 @@
                 flex-direction: column;
             }
 
+            .mobile-submit-container {
+                display: block;
+            }
+
             .sidebar {
                 position: fixed;
                 top: 0;
@@ -986,6 +1001,11 @@
         <!-- Main Content -->
         <div class="main-content">
             <div class="question-container" id="questionContainer"></div>
+            
+            <!-- Mobile Submit Button -->
+            <div class="mobile-submit-container">
+                <button id="mobileSubmitBtn" class="btn-submit">Nộp bài</button>
+            </div>
         </div>
     </div>
 
@@ -1172,6 +1192,7 @@
             renderQuestions();
 
             document.getElementById('submitBtn').addEventListener('click', submitExam);
+            document.getElementById('mobileSubmitBtn').addEventListener('click', submitExam);
         }
 
         // Initialize timer
@@ -1524,7 +1545,7 @@
             // Setup essay summary UI: show animated ellipsis while grading if there are any pending to grade
             const totalEssayCount = essayTotal;
             if (totalEssayCount > 0) {
-                document.getElementById('essayPercentValue').textContent = `— (${totalEssayCount} câu)`;
+                document.getElementById('essayPercentValue').textContent = `* (${totalEssayCount} câu)`;
                 startEssayEllipsis();
             } else {
                 document.getElementById('essayPercentValue').textContent = 'N/A';

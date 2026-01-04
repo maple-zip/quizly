@@ -999,6 +999,7 @@
         let startTime = null;
         let timerInterval = null;
         let mediaFiles = {}; // filename -> blob URL
+        let currentPlayingMedia = null; // Track currently playing media
 
         // Get ZIP URL from query string
         const urlParams = new URLSearchParams(window.location.search);
@@ -1287,14 +1288,35 @@
                 if (type === 'image') {
                     html += `<img src="${url}" alt="Media">`;
                 } else if (type === 'audio') {
-                    html += `<audio controls src="${url}"></audio>`;
+                    html += `<audio controls src="${url}" class="media-player"></audio>`;
                 } else if (type === 'video') {
-                    html += `<video controls src="${url}"></video>`;
+                    html += `<video controls src="${url}" class="media-player"></video>`;
                 }
             });
             
             html += '</div>';
             return html;
+        }
+
+        // Setup media player controls
+        function setupMediaPlayers() {
+            document.querySelectorAll('.media-player').forEach(media => {
+                media.addEventListener('play', function() {
+                    if (currentPlayingMedia && currentPlayingMedia !== this) {
+                        currentPlayingMedia.pause();
+                    }
+                    currentPlayingMedia = this;
+                });
+            });
+        }
+
+        // Stop all media players
+        function stopAllMedia() {
+            document.querySelectorAll('.media-player').forEach(media => {
+                media.pause();
+                media.currentTime = 0;
+            });
+            currentPlayingMedia = null;
         }
 
         // Render questions with section separation (MC, TF)
@@ -1344,6 +1366,7 @@
 
             // Add event listeners
             setupEventListeners();
+            setupMediaPlayers();
         }
 
         // Render multiple choice
@@ -1484,6 +1507,9 @@
             if (!confirm('Bạn có chắc chắn muốn nộp bài?')) return;
 
             clearInterval(timerInterval);
+            stopAllMedia();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
             document.getElementById('examScreen').classList.add('hidden');
             document.getElementById('resultsScreen').classList.remove('hidden');
 
@@ -1569,6 +1595,8 @@
             document.getElementById('reviewBtn').addEventListener('click', () => {
                 location.reload();
             });
+            
+            setupMediaPlayers();
         }
 
         // Display multiple choice result

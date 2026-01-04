@@ -141,11 +141,14 @@
     </div>
 
     <script>
-        // CẤU HÌNH - Thay đổi các giá trị này
+        // CẤU HÌNH - URL đã được cập nhật cho function quizly-upload-api
         const CONFIG = {
-            edgeFunctionUrl: 'https://nlopfplwzrkmvczbwngb.supabase.co/functions/v1/quizly-upload-api', // Thay tên function
-            turnstileSiteKey: '0x4AAAAAACKdJDqJa3PzSepQ' // Thay bằng Site Key của bạn
+            edgeFunctionUrl: 'https://nlopfplwzrkmvczbwngb.supabase.co/functions/v1/quizly-upload-api',
+            turnstileSiteKey: '0x4AAAAAACKdJDqJa3PzSepQ',
+            supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5sb3BmcGx3enJrbXZjemJ3bmdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc1MzI2MjcsImV4cCI6MjA4MzEwODYyN30.188yIrRkMwu9blprUnzpXjyg9PmS_Thiiafey27CXL8'
         };
+
+        console.log('🔧 Config loaded:', CONFIG); // Debug log
 
         let selectedFile = null;
         let turnstileToken = null;
@@ -250,6 +253,10 @@
 
                 const response = await fetch(CONFIG.edgeFunctionUrl, {
                     method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${CONFIG.supabaseAnonKey}`,
+                        'apikey': CONFIG.supabaseAnonKey
+                    },
                     body: formData
                 });
 

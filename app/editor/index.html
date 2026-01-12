@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quizly Editor</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f5f7fa;
+            color: #2c3e50;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: #48bb78;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e0;
+        }
+
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #2d3748;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 6px;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="datetime-local"],
+        textarea,
+        select {
+            padding: 10px 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+            font-family: inherit;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .question-item {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .question-number {
+            font-weight: 700;
+            font-size: 16px;
+            color: #667eea;
+        }
+
+        .question-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 6px;
+        }
+
+        .btn-danger {
+            background: #f56565;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #e53e3e;
+        }
+
+        .choice-item,
+        .tf-item {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+
+        .choice-header,
+        .tf-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .choice-label {
+            background: #667eea;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .media-upload {
+            margin-top: 10px;
+        }
+
+        .media-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .media-item {
+            background: #edf2f7;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .media-item button {
+            background: #fc8181;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 2px 6px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+
+        .add-question-btn {
+            width: 100%;
+            padding: 15px;
+            background: #f7fafc;
+            border: 2px dashed #cbd5e0;
+            border-radius: 12px;
+            color: #4a5568;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .add-question-btn:hover {
+            background: #edf2f7;
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #2d3748;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .publish-modal .turnstile-container {
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .result-box {
+            background: #f0fff4;
+            border: 2px solid #48bb78;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .result-box h3 {
+            color: #22543d;
+            margin-bottom: 10px;
+        }
+
+        .result-box a {
+            color: #667eea;
+            word-break: break-all;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .file-input-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: #edf2f7;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            color: #4a5568;
+            transition: all 0.3s;
+        }
+
+        .file-input-label:hover {
+            background: #e2e8f0;
+        }
+
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📝 Quizly Editor</h1>
+        <p>Soạn bài kiểm tra trực tuyến - Hỗ trợ trắc nghiệm và đúng/sai</p>
+    </div>
+
+    <div class="container">
+        <div class="actions">
+            <button class="btn btn-primary" onclick="exportZip()">💾 Tải xuống ZIP</button>
+            <button class="btn btn-success" onclick="openPublishModal()">🚀 Xuất bản</button>
+            <label class="btn btn-secondary file-input-label">
+                📁 Tải lên ZIP
+                <input type="file" accept=".zip" onchange="importZip(event)">
+            </label>
+        </div>
+
+        <!-- Config Section -->
+        <div class="section">
+            <div class="section-title">⚙️ Cấu hình đề thi</div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Tiêu đề</label>
+                    <input type="text" id="title" placeholder="Ví dụ: Kiểm tra Toán 10">
+                </div>
+                <div class="form-group">
+                    <label>Môn học</label>
+                    <input type="text" id="subject" placeholder="Ví dụ: Toán">
+                </div>
+                <div class="form-group">
+                    <label>Khối lớp</label>
+                    <input type="text" id="grade" placeholder="Ví dụ: 10">
+                </div>
+                <div class="form-group">
+                    <label>Tác giả</label>
+                    <input type="text" id="author" placeholder="Tên giáo viên">
+                </div>
+            </div>
+            <div class="form-grid" style="margin-top: 20px;">
+                <div class="form-group">
+                    <label>Mô tả</label>
+                    <textarea id="description" placeholder="Mô tả về bài kiểm tra"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Thời gian (phút, 0 = không giới hạn)</label>
+                    <input type="number" id="duration" value="45" min="0">
+                </div>
+                <div class="form-group">
+                    <label>Thời gian bắt đầu</label>
+                    <input type="datetime-local" id="startTime">
+                </div>
+                <div class="form-group">
+                    <label>Thời gian kết thúc</label>
+                    <input type="datetime-local" id="endTime">
+                </div>
+            </div>
+            <div class="form-grid" style="margin-top: 15px;">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="shuffleQuestions">
+                    <label for="shuffleQuestions">Xáo trộn câu hỏi</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="shuffleAnswers">
+                    <label for="shuffleAnswers">Xáo trộn đáp án</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Questions Section -->
+        <div class="section">
+            <div class="section-title">❓ Câu hỏi</div>
+            <div id="questionsList"></div>
+            <button class="add-question-btn" onclick="openAddQuestionModal()">+ Thêm câu hỏi</button>
+        </div>
+    </div>
+
+    <!-- Add Question Modal -->
+    <div class="modal" id="addQuestionModal">
+        <div class="modal-content">
+            <div class="modal-header">Chọn loại câu hỏi</div>
+            <button class="btn btn-primary" style="width: 100%; margin-bottom: 10px;" onclick="addQuestion('multiple_choice')">
+                📝 Trắc nghiệm (ABCD)
+            </button>
+            <button class="btn btn-primary" style="width: 100%;" onclick="addQuestion('true_false_group')">
+                ✅ Đúng/Sai
+            </button>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" style="width: 100%;" onclick="closeAddQuestionModal()">Hủy</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Publish Modal -->
+    <div class="modal publish-modal" id="publishModal">
+        <div class="modal-content">
+            <div class="modal-header">🚀 Xuất bản lên Quizly</div>
+            <p style="margin-bottom: 20px; color: #718096;">
+                Hệ thống sẽ tạo file ZIP và tải lên server, sau đó trả về link làm bài.
+            </p>
+            
+            <div class="turnstile-container">
+                <div class="cf-turnstile" 
+                     data-sitekey="0x4AAAAAACKdJDqJa3PzSepQ"
+                     data-callback="onTurnstileSuccess"></div>
+            </div>
+
+            <div class="loading" id="publishLoading">
+                <div class="spinner"></div>
+                <p>Đang xuất bản...</p>
+            </div>
+
+            <div id="publishResult"></div>
+
+            <div class="modal-actions">
+                <button class="btn btn-success" id="publishBtn" onclick="publishQuiz()" disabled>Xuất bản</button>
+                <button class="btn btn-secondary" onclick="closePublishModal()">Đóng</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const CONFIG = {
+            edgeFunctionUrl: 'https://nlopfplwzrkmvczbwngb.supabase.co/functions/v1/quizly-upload-api',
+            supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5sb3BmcGx3enJrbXZjemJ3bmdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc1MzI2MjcsImV4cCI6MjA4MzEwODYyN30.188yIrRkMwu9blprUnzpXjyg9PmS_Thiiafey27CXL8'
+        };
+
+        let questions = [];
+        let mediaFiles = {};
+        let turnstileToken = null;
+
+        // Initialize dates
+        const now = new Date();
+        const nextYear = new Date(now.getFullYear() + 1, 11, 31, 23, 59);
+        document.getElementById('startTime').value = now.toISOString().slice(0, 16);
+        document.getElementById('endTime').value = nextYear.toISOString().slice(0, 16);
+
+        function renderQuestions() {
+            const list = document.getElementById('questionsList');
+            list.innerHTML = questions.map((q, idx) => {
+                if (q.type === 'multiple_choice') {
+                    return renderMCQuestion(q, idx);
+                } else {
+                    return renderTFQuestion(q, idx);
+                }
+            }).join('');
+        }
+
+        function renderMCQuestion(q, idx) {
+            const mediaList = q.question.media ? q.question.media.map((m, i) => 
+                `<div class="media-item">${m} <button onclick="removeQuestionMedia(${idx}, ${i})">×</button></div>`
+            ).join('') : '';
+
+            const choices = Object.entries(q.choices).map(([key, choice]) => {
+                const choiceMedia = choice.media ? choice.media.map((m, i) => 
+                    `<div class="media-item">${m} <button onclick="removeChoiceMedia(${idx}, '${key}', ${i})">×</button></div>`
+                ).join('') : '';
+
+                return `
+                    <div class="choice-item">
+                        <div class="choice-header">
+                            <div class="choice-label">${key}</div>
+                            <input type="radio" name="correct_${idx}" value="${key}" 
+                                ${q.correct === key ? 'checked' : ''} 
+                                onchange="setCorrect(${idx}, '${key}')">
+                            <label style="flex: 1;">
+                                <input type="text" value="${choice.text}" 
+                                    onchange="updateChoiceText(${idx}, '${key}', this.value)" 
+                                    placeholder="Nội dung đáp án ${key}" style="width: 100%;">
+                            </label>
+                        </div>
+                        <div class="media-upload">
+                            <label class="file-input-label">
+                                + Thêm media
+                                <input type="file" multiple onchange="addChoiceMedia(${idx}, '${key}', event)">
+                            </label>
+                            <div class="media-list">${choiceMedia}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            return `
+                <div class="question-item">
+                    <div class="question-header">
+                        <span class="question-number">Câu ${idx + 1}: Trắc nghiệm</span>
+                        <div class="question-actions">
+                            <button class="btn btn-small btn-danger" onclick="deleteQuestion(${idx})">Xóa</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Câu hỏi</label>
+                        <textarea onchange="updateQuestionText(${idx}, this.value)">${q.question.text}</textarea>
+                    </div>
+                    <div class="media-upload" style="margin: 10px 0;">
+                        <label class="file-input-label">
+                            + Thêm media cho câu hỏi
+                            <input type="file" multiple onchange="addQuestionMedia(${idx}, event)">
+                        </label>
+                        <div class="media-list">${mediaList}</div>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <label>Đáp án (chọn đáp án đúng)</label>
+                        ${choices}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderTFQuestion(q, idx) {
+            const mediaList = q.question.media ? q.question.media.map((m, i) => 
+                `<div class="media-item">${m} <button onclick="removeQuestionMedia(${idx}, ${i})">×</button></div>`
+            ).join('') : '';
+
+            const items = Object.entries(q.items).map(([key, item]) => {
+                const itemMedia = item.media ? item.media.map((m, i) => 
+                    `<div class="media-item">${m} <button onclick="removeTFItemMedia(${idx}, '${key}', ${i})">×</button></div>`
+                ).join('') : '';
+
+                return `
+                    <div class="tf-item">
+                        <div class="tf-header">
+                            <strong>${key}.</strong>
+                            <input type="text" value="${item.text}" 
+                                onchange="updateTFItemText(${idx}, '${key}', this.value)" 
+                                placeholder="Mệnh đề ${key}" style="flex: 1;">
+                            <select onchange="updateTFItemCorrect(${idx}, '${key}', this.value)">
+                                <option value="true" ${item.correct ? 'selected' : ''}>Đúng</option>
+                                <option value="false" ${!item.correct ? 'selected' : ''}>Sai</option>
+                            </select>
+                        </div>
+                        <div class="media-upload">
+                            <label class="file-input-label">
+                                + Thêm media
+                                <input type="file" multiple onchange="addTFItemMedia(${idx}, '${key}', event)">
+                            </label>
+                            <div class="media-list">${itemMedia}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            return `
+                <div class="question-item">
+                    <div class="question-header">
+                        <span class="question-number">Câu ${idx + 1}: Đúng/Sai</span>
+                        <div class="question-actions">
+                            <button class="btn btn-small btn-danger" onclick="deleteQuestion(${idx})">Xóa</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Đề bài chung</label>
+                        <textarea onchange="updateQuestionText(${idx}, this.value)">${q.question.text}</textarea>
+                    </div>
+                    <div class="media-upload" style="margin: 10px 0;">
+                        <label class="file-input-label">
+                            + Thêm media cho đề bài
+                            <input type="file" multiple onchange="addQuestionMedia(${idx}, event)">
+                        </label>
+                        <div class="media-list">${mediaList}</div>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <label>Các mệnh đề</label>
+                        ${items}
+                    </div>
+                </div>
+            `;
+        }
+
+        function openAddQuestionModal() {
+            document.getElementById('addQuestionModal').classList.add('active');
+        }
+
+        function closeAddQuestionModal() {
+            document.getElementById('addQuestionModal').classList.remove('active');
+        }
+
+        function addQuestion(type) {
+            if (type === 'multiple_choice') {
+                questions.push({
+                    type: 'multiple_choice',
+                    question: { text: '', media: [] },
+                    choices: {
+                        A: { text: '', media: [] },
+                        B: { text: '', media: [] },
+                        C: { text: '', media: [] },
+                        D: { text: '', media: [] }
+                    },
+                    correct: 'A'
+                });
+            } else {
+                questions.push({
+                    type: 'true_false_group',
+                    question: { text: '', media: [] },
+                    items: {
+                        a: { text: '', media: [], correct: true },
+                        b: { text: '', media: [], correct: false },
+                        c: { text: '', media: [], correct: true },
+                        d: { text: '', media: [], correct: false }
+                    }
+                });
+            }
+            closeAddQuestionModal();
+            renderQuestions();
+        }
+
+        function deleteQuestion(idx) {
+            if (confirm('Xóa câu hỏi này?')) {
+                questions.splice(idx, 1);
+                renderQuestions();
+            }
+        }
+
+        function updateQuestionText(idx, text) {
+            questions[idx].question.text = text;
+        }
+
+        function updateChoiceText(idx, key, text) {
+            questions[idx].choices[key].text = text;
+        }
+
+        function setCorrect(idx, key) {
+            questions[idx].correct = key;
+        }
+
+        function updateTFItemText(idx, key, text) {
+            questions[idx].items[key].text = text;
+        }
+
+        function updateTFItemCorrect(idx, key, value) {
+            questions[idx].items[key].correct = value === 'true';
+        }
+
+        async function addQuestionMedia(idx, event) {
+            const files = Array.from(event.target.files);
+            for (const file of files) {
+                const fileName = file.name;
+                mediaFiles[fileName] = file;
+                questions[idx].question.media.push(fileName);
+            }
+            renderQuestions();
+        }
+
+        function removeQuestionMedia(idx, mediaIdx) {
+            const fileName = questions[idx].question.media[mediaIdx];
+            delete mediaFiles[fileName];
+            questions[idx].question.media.splice(mediaIdx, 1);
+            renderQuestions();
+        }
+
+        async function addChoiceMedia(idx, key, event) {
+            const files = Array.from(event.target.files);
+            for (const file of files) {
+                const fileName = file.name;
+                mediaFiles[fileName] = file;
+                questions[idx].choices[key].media.push(fileName);
+            }
+            renderQuestions();
+        }
+
+        function removeChoiceMedia(idx, key, mediaIdx) {
+            const fileName = questions[idx].choices[key].media[mediaIdx];
+            delete mediaFiles[fileName];
+            questions[idx].choices[key].media.splice(mediaIdx, 1);
+            renderQuestions();
+        }
+
+        async function addTFItemMedia(idx, key, event) {
+            const files = Array.from(event.target.files);
+            for (const file of files) {
+                const fileName = file.name;
+                mediaFiles[fileName] = file;
+                questions[idx].items[key].media.push(fileName);
+            }
+            renderQuestions();
+        }
+
+        function removeTFItemMedia(idx, key, mediaIdx) {
+            const fileName = questions[idx].items[key].media[mediaIdx];
+            delete mediaFiles[fileName];
+            questions[idx].items[key].media.splice(mediaIdx, 1);
+            renderQuestions();
+        }
+
+        function prepareQuestionsForExport() {
+            return questions.map(q => {
+                const exported = { ...q };
+                
+                // Convert media arrays to string if only 1 file, or keep as array
+                if (exported.question.media) {
+                    exported.question.media = exported.question.media.length === 1 
+                        ? exported.question.media[0] 
+                        : exported.question.media;
+                    if (exported.question.media.length === 0) delete exported.question.media;
+                }
+
+                if (q.type === 'multiple_choice') {
+                    Object.keys(exported.choices).forEach(key => {
+                        if (exported.choices[key].media) {
+                            exported.choices[key].media = exported.choices[key].media.length === 1
+                                ? exported.choices[key].media[0]
+                                : exported.choices[key].media;
+                            if (exported.choices[key].media.length === 0) delete exported.choices[key].media;
+                        }
+                    });
+                } else {
+                    Object.keys(exported.items).forEach(key => {
+                        if (exported.items[key].media) {
+                            exported.items[key].media = exported.items[key].media.length === 1
+                                ? exported.items[key].media[0]
+                                : exported.items[key].media;
+                            if (exported.items[key].media.length === 0) delete exported.items[key].media;
+                        }
+                    });
+                }
+
+                return exported;
+            });
+        }
+
+        async function exportZip() {
+            const zip = new JSZip();
+
+            // Config
+            const config = {
+                metadata: {
+                    title: document.getElementById('title').value,
+                    subject: document.getElementById('subject').value,
+                    grade: document.getElementById('grade').value,
+                    author: document.getElementById('author').value
+                },
+                exam: {
+                    description: document.getElementById('description').value,
+                    duration_minutes: parseInt(document.getElementById('duration').value),
+                    start_time: document.getElementById('startTime').value.replace('T', ' '),
+                    end_time: document.getElementById('endTime').value.replace('T', ' '),
+                    shuffle_questions: document.getElementById('shuffleQuestions').checked,
+                    shuffle_answers: document.getElementById('shuffleAnswers').checked
+                }
+            };
+
+            zip.file('config.yaml', jsyaml.dump(config));
+
+            // Questions
+            const questionsData = { questions: prepareQuestionsForExport() };
+            zip.file('questions.yaml', jsyaml.dump(questionsData));
+
+            // Media folder
+            const mediaFolder = zip.folder('media');
+            for (const [fileName, file] of Object.entries(mediaFiles)) {
+                mediaFolder.file(fileName, file);
+            }
+
+            // Generate and download
+            const blob = await zip.generateAsync({ type: 'blob' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'quiz_package.zip';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        async function importZip(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            try {
+                const zip = await JSZip.loadAsync(file);
+
+                // Load config
+                const configText = await zip.file('config.yaml').async('text');
+                const config = jsyaml.load(configText);
+
+                document.getElementById('title').value = config.metadata.title || '';
+                document.getElementById('subject').value = config.metadata.subject || '';
+                document.getElementById('grade').value = config.metadata.grade || '';
+                document.getElementById('author').value = config.metadata.author || '';
+                document.getElementById('description').value = config.exam.description || '';
+                document.getElementById('duration').value = config.exam.duration_minutes || 45;
+                document.getElementById('startTime').value = config.exam.start_time.replace(' ', 'T');
+                document.getElementById('endTime').value = config.exam.end_time.replace(' ', 'T');
+                document.getElementById('shuffleQuestions').checked = config.exam.shuffle_questions;
+                document.getElementById('shuffleAnswers').checked = config.exam.shuffle_answers;
+
+                // Load questions
+                const questionsText = await zip.file('questions.yaml').async('text');
+                const questionsData = jsyaml.load(questionsText);
+
+                questions = questionsData.questions.map(q => {
+                    const normalized = { ...q };
+                    
+                    // Normalize media to arrays
+                    if (normalized.question.media) {
+                        normalized.question.media = Array.isArray(normalized.question.media) 
+                            ? normalized.question.media 
+                            : [normalized.question.media];
+                    } else {
+                        normalized.question.media = [];
+                    }
+
+                    if (q.type === 'multiple_choice') {
+                        Object.keys(normalized.choices).forEach(key => {
+                            if (normalized.choices[key].media) {
+                                normalized.choices[key].media = Array.isArray(normalized.choices[key].media)
+                                    ? normalized.choices[key].media
+                                    : [normalized.choices[key].media];
+                            } else {
+                                normalized.choices[key].media = [];
+                            }
+                        });
+                    } else {
+                        Object.keys(normalized.items).forEach(key => {
+                            if (normalized.items[key].media) {
+                                normalized.items[key].media = Array.isArray(normalized.items[key].media)
+                                    ? normalized.items[key].media
+                                    : [normalized.items[key].media];
+                            } else {
+                                normalized.items[key].media = [];
+                            }
+                        });
+                    }
+
+                    return normalized;
+                });
+
+                // Load media files
+                mediaFiles = {};
+                const mediaFolder = zip.folder('media');
+                if (mediaFolder) {
+                    const mediaPromises = [];
+                    mediaFolder.forEach((relativePath, zipEntry) => {
+                        mediaPromises.push(
+                            zipEntry.async('blob').then(blob => {
+                                const file = new File([blob], relativePath);
+                                mediaFiles[relativePath] = file;
+                            })
+                        );
+                    });
+                    await Promise.all(mediaPromises);
+                }
+
+                renderQuestions();
+                alert('Tải lên thành công!');
+            } catch (error) {
+                alert('Lỗi khi đọc file ZIP: ' + error.message);
+            }
+        }
+
+        function openPublishModal() {
+            document.getElementById('publishModal').classList.add('active');
+            document.getElementById('publishResult').innerHTML = '';
+            turnstileToken = null;
+            document.getElementById('publishBtn').disabled = true;
+            
+            // Reset Turnstile
+            if (window.turnstile) {
+                window.turnstile.reset();
+            }
+        }
+
+        function closePublishModal() {
+            document.getElementById('publishModal').classList.remove('active');
+        }
+
+        window.onTurnstileSuccess = function(token) {
+            turnstileToken = token;
+            document.getElementById('publishBtn').disabled = false;
+        };
+
+        async function publishQuiz() {
+            if (!turnstileToken) {
+                alert('Vui lòng xác thực Turnstile');
+                return;
+            }
+
+            const publishBtn = document.getElementById('publishBtn');
+            const loading = document.getElementById('publishLoading');
+            const resultBox = document.getElementById('publishResult');
+
+            publishBtn.disabled = true;
+            loading.style.display = 'block';
+            resultBox.innerHTML = '';
+
+            try {
+                // Generate ZIP
+                const zip = new JSZip();
+
+                const config = {
+                    metadata: {
+                        title: document.getElementById('title').value,
+                        subject: document.getElementById('subject').value,
+                        grade: document.getElementById('grade').value,
+                        author: document.getElementById('author').value
+                    },
+                    exam: {
+                        description: document.getElementById('description').value,
+                        duration_minutes: parseInt(document.getElementById('duration').value),
+                        start_time: document.getElementById('startTime').value.replace('T', ' '),
+                        end_time: document.getElementById('endTime').value.replace('T', ' '),
+                        shuffle_questions: document.getElementById('shuffleQuestions').checked,
+                        shuffle_answers: document.getElementById('shuffleAnswers').checked
+                    }
+                };
+
+                zip.file('config.yaml', jsyaml.dump(config));
+
+                const questionsData = { questions: prepareQuestionsForExport() };
+                zip.file('questions.yaml', jsyaml.dump(questionsData));
+
+                const mediaFolder = zip.folder('media');
+                for (const [fileName, file] of Object.entries(mediaFiles)) {
+                    mediaFolder.file(fileName, file);
+                }
+
+                const blob = await zip.generateAsync({ type: 'blob' });
+                const zipFile = new File([blob], 'quiz_package.zip', { type: 'application/zip' });
+
+                // Upload
+                const formData = new FormData();
+                formData.append('file', zipFile);
+                formData.append('turnstileToken', turnstileToken);
+
+                const response = await fetch(CONFIG.edgeFunctionUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${CONFIG.supabaseAnonKey}`,
+                        'apikey': CONFIG.supabaseAnonKey
+                    },
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    const currentDomain = window.location.origin;
+                    const quizLink = `${currentDomain}/quizly?r=${encodeURIComponent(result.publicUrl)}`;
+                    
+                    resultBox.innerHTML = `
+                        <div class="result-box">
+                            <h3>✅ Xuất bản thành công!</h3>
+                            <p><strong>File ID:</strong> ${result.fileId}</p>
+                            <p><strong>Tên file:</strong> ${result.fileName}</p>
+                            <p><strong>Link làm bài:</strong></p>
+                            <a href="${quizLink}" target="_blank">${quizLink}</a>
+                        </div>
+                    `;
+                } else {
+                    resultBox.innerHTML = `
+                        <div style="background: #fff5f5; border: 2px solid #fc8181; border-radius: 8px; padding: 15px; color: #c53030;">
+                            <strong>❌ Lỗi:</strong> ${result.error}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultBox.innerHTML = `
+                    <div style="background: #fff5f5; border: 2px solid #fc8181; border-radius: 8px; padding: 15px; color: #c53030;">
+                        <strong>❌ Lỗi:</strong> ${error.message}
+                    </div>
+                `;
+            } finally {
+                loading.style.display = 'none';
+                publishBtn.disabled = false;
+            }
+        }
+
+        // Initialize
+        renderQuestions();
+    </script>
+</body>
+</html>

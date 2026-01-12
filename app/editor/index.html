@@ -8,7 +8,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
     <style>
-        /* Giữ nguyên CSS */
+        /* Giữ nguyên CSS cũ, thêm CSS mới cho media preview */
         * {
             margin: 0;
             padding: 0;
@@ -93,6 +93,17 @@
 
         .btn-secondary:hover {
             background: #cbd5e0;
+        }
+
+        .btn-copy {
+            background: #4299e1;
+            color: white;
+        }
+
+        .btn-copy:hover {
+            background: #3182ce;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(66, 153, 225, 0.4);
         }
 
         .section {
@@ -273,6 +284,68 @@
             font-size: 11px;
         }
 
+        /* CSS mới cho media preview */
+        .media-preview-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .media-preview {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 10px;
+            max-width: 100%;
+        }
+
+        .media-preview img {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 4px;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .media-preview video,
+        .media-preview audio {
+            width: 100%;
+            max-width: 400px;
+            border-radius: 4px;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .media-controls {
+            display: flex;
+            gap: 5px;
+            margin-top: 5px;
+            justify-content: center;
+        }
+
+        .media-controls button {
+            padding: 4px 8px;
+            font-size: 11px;
+            border: none;
+            border-radius: 4px;
+            background: #667eea;
+            color: white;
+            cursor: pointer;
+        }
+
+        .media-controls button:hover {
+            background: #5568d3;
+        }
+
+        .media-controls button.stop {
+            background: #f56565;
+        }
+
+        .media-controls button.stop:hover {
+            background: #e53e3e;
+        }
+
         .add-question-btn {
             width: 100%;
             padding: 15px;
@@ -374,6 +447,32 @@
         .result-box a {
             color: #667eea;
             word-break: break-all;
+            text-decoration: none;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+
+        .result-box a:hover {
+            text-decoration: underline;
+        }
+
+        .link-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .link-container input {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: monospace;
+        }
+
+        .link-container button {
+            white-space: nowrap;
         }
 
         input[type="file"] {
@@ -398,9 +497,48 @@
             background: #e2e8f0;
         }
 
+        /* Thêm style cho upload status */
+        .upload-status {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #718096;
+            text-align: center;
+        }
+
+        .upload-status.hidden {
+            display: none;
+        }
+
+        /* Ẩn tên file trong media-item */
+        .media-item span {
+            display: none;
+        }
+
+        /* Style cho media item khi không có preview */
+        .media-item.no-preview {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .media-item.no-preview span {
+            display: inline-block;
+            font-size: 12px;
+            color: #4a5568;
+        }
+
         @media (max-width: 768px) {
             .form-grid {
                 grid-template-columns: 1fr;
+            }
+            
+            .link-container {
+                flex-direction: column;
+            }
+            
+            .media-controls {
+                flex-wrap: wrap;
+                justify-content: center;
             }
         }
     </style>
@@ -504,6 +642,11 @@
                 Hệ thống sẽ tạo file ZIP và tải lên server, sau đó trả về link làm bài.
             </p>
             
+            <!-- Ẩn thông tin upload -->
+            <div class="upload-status hidden" id="uploadStatus">
+                Đang xử lý upload...
+            </div>
+            
             <div class="turnstile-container">
                 <div class="cf-turnstile" 
                      data-sitekey="0x4AAAAAACKdJDqJa3PzSepQ"
@@ -533,6 +676,8 @@
         let questions = [];
         let mediaFiles = {};
         let turnstileToken = null;
+        let currentlyPlayingMedia = null;
+        let publishedLink = null;
 
         // Initialize dates
         const now = new Date();
@@ -551,15 +696,141 @@
             }).join('');
         }
 
+        function getMediaType(fileName) {
+            const extension = fileName.split('.').pop().toLowerCase();
+            const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'];
+            const audioExtensions = ['mp3', 'wav', 'ogg', 'm4a', 'aac'];
+            const videoExtensions = ['mp4', 'webm', 'ogg', 'mov', 'avi', 'mkv'];
+            
+            if (imageExtensions.includes(extension)) return 'image';
+            if (audioExtensions.includes(extension)) return 'audio';
+            if (videoExtensions.includes(extension)) return 'video';
+            return 'unknown';
+        }
+
+        function createMediaPreview(fileName, idx, type, context, key = null) {
+            const mediaType = getMediaType(fileName);
+            const file = mediaFiles[fileName];
+            
+            let previewHTML = '';
+            
+            if (mediaType === 'image') {
+                const url = URL.createObjectURL(file);
+                previewHTML = `
+                    <div class="media-preview">
+                        <img src="${url}" alt="Hình ảnh" onload="URL.revokeObjectURL(this.src)">
+                        <div class="media-controls">
+                            <button onclick="downloadMedia('${fileName}')">Tải xuống</button>
+                        </div>
+                    </div>
+                `;
+            } else if (mediaType === 'audio') {
+                const url = URL.createObjectURL(file);
+                previewHTML = `
+                    <div class="media-preview">
+                        <audio id="audio_${fileName.replace(/[^a-zA-Z0-9]/g, '_')}" 
+                               controls 
+                               onplay="pauseOtherMedia(this)">
+                            <source src="${url}" type="audio/${file.name.split('.').pop()}">
+                            Trình duyệt không hỗ trợ phát âm thanh.
+                        </audio>
+                        <div class="media-controls">
+                            <button onclick="downloadMedia('${fileName}')">Tải xuống</button>
+                            <button class="stop" onclick="stopAllMedia()">Dừng tất cả</button>
+                        </div>
+                    </div>
+                `;
+            } else if (mediaType === 'video') {
+                const url = URL.createObjectURL(file);
+                previewHTML = `
+                    <div class="media-preview">
+                        <video id="video_${fileName.replace(/[^a-zA-Z0-9]/g, '_')}" 
+                               controls 
+                               width="300"
+                               onplay="pauseOtherMedia(this)">
+                            <source src="${url}" type="video/${file.name.split('.').pop()}">
+                            Trình duyệt không hỗ trợ phát video.
+                        </video>
+                        <div class="media-controls">
+                            <button onclick="downloadMedia('${fileName}')">Tải xuống</button>
+                            <button class="stop" onclick="stopAllMedia()">Dừng tất cả</button>
+                        </div>
+                    </div>
+                `;
+            } else {
+                // Nếu là file không thể preview, chỉ hiển thị nút xóa và tải xuống
+                return `
+                    <div class="media-item no-preview">
+                        <span>${fileName}</span>
+                        <button onclick="${getRemoveMediaFunction(idx, type, context, key, fileName)}">×</button>
+                        <button onclick="downloadMedia('${fileName}')" style="padding: 2px 6px; font-size: 11px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">Tải xuống</button>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="media-item">
+                    <!-- Đã ẩn tên file -->
+                    <button onclick="${getRemoveMediaFunction(idx, type, context, key, fileName)}">×</button>
+                    ${previewHTML}
+                </div>
+            `;
+        }
+
+        function getRemoveMediaFunction(idx, type, context, key, fileName) {
+            if (type === 'question') {
+                const mediaIdx = questions[idx].question.media.indexOf(fileName);
+                return `removeQuestionMedia(${idx}, ${mediaIdx})`;
+            } else if (type === 'choice') {
+                const mediaIdx = questions[idx].choices[key].media.indexOf(fileName);
+                return `removeChoiceMedia(${idx}, '${key}', ${mediaIdx})`;
+            } else if (type === 'tfitem') {
+                const mediaIdx = questions[idx].items[key].media.indexOf(fileName);
+                return `removeTFItemMedia(${idx}, '${key}', ${mediaIdx})`;
+            }
+        }
+
+        function pauseOtherMedia(currentElement) {
+            currentlyPlayingMedia = currentElement;
+            
+            document.querySelectorAll('audio, video').forEach(media => {
+                if (media !== currentElement && !media.paused) {
+                    media.pause();
+                }
+            });
+        }
+
+        function stopAllMedia() {
+            document.querySelectorAll('audio, video').forEach(media => {
+                media.pause();
+                media.currentTime = 0;
+            });
+            currentlyPlayingMedia = null;
+        }
+
+        function downloadMedia(fileName) {
+            const file = mediaFiles[fileName];
+            if (file) {
+                const url = URL.createObjectURL(file);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileName;
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+        }
+
         function renderMCQuestion(q, idx) {
-            const mediaList = q.question.media && q.question.media.length > 0 ? q.question.media.map((m, i) => 
-                `<div class="media-item">${m} <button onclick="removeQuestionMedia(${idx}, ${i})">×</button></div>`
-            ).join('') : '';
+            const mediaList = q.question.media && q.question.media.length > 0 ? 
+                q.question.media.map((fileName, i) => 
+                    createMediaPreview(fileName, idx, 'question', 'question')
+                ).join('') : '';
 
             const choices = Object.entries(q.choices).map(([key, choice]) => {
-                const choiceMedia = choice.media && choice.media.length > 0 ? choice.media.map((m, i) => 
-                    `<div class="media-item">${m} <button onclick="removeChoiceMedia(${idx}, '${key}', ${i})">×</button></div>`
-                ).join('') : '';
+                const choiceMedia = choice.media && choice.media.length > 0 ? 
+                    choice.media.map((fileName, i) => 
+                        createMediaPreview(fileName, idx, 'choice', 'choice', key)
+                    ).join('') : '';
 
                 return `
                     <div class="choice-item">
@@ -574,23 +845,13 @@
                                     placeholder="Nội dung đáp án ${key}" style="width: 100%;">
                             </label>
                         </div>
-                        ${choice.media && choice.media.length > 0 ? `
-                            <div class="media-upload">
-                                <label class="file-input-label">
-                                    + Thêm media
-                                    <input type="file" multiple onchange="addChoiceMedia(${idx}, '${key}', event)">
-                                </label>
-                                <div class="media-list">${choiceMedia}</div>
-                            </div>
-                        ` : ''}
-                        ${(!choice.media || choice.media.length === 0) ? `
-                            <div class="media-upload">
-                                <label class="file-input-label">
-                                    + Thêm media
-                                    <input type="file" multiple onchange="addChoiceMedia(${idx}, '${key}', event)">
-                                </label>
-                            </div>
-                        ` : ''}
+                        <div class="media-upload">
+                            <label class="file-input-label">
+                                + Thêm media
+                                <input type="file" multiple onchange="addChoiceMedia(${idx}, '${key}', event)">
+                            </label>
+                            ${choiceMedia ? `<div class="media-preview-container">${choiceMedia}</div>` : ''}
+                        </div>
                     </div>
                 `;
             }).join('');
@@ -612,7 +873,7 @@
                             + Thêm media cho câu hỏi
                             <input type="file" multiple onchange="addQuestionMedia(${idx}, event)">
                         </label>
-                        ${mediaList ? `<div class="media-list">${mediaList}</div>` : ''}
+                        ${mediaList ? `<div class="media-preview-container">${mediaList}</div>` : ''}
                     </div>
                     <div style="margin-top: 15px;">
                         <label>Đáp án (chọn đáp án đúng)</label>
@@ -623,14 +884,16 @@
         }
 
         function renderTFQuestion(q, idx) {
-            const mediaList = q.question.media && q.question.media.length > 0 ? q.question.media.map((m, i) => 
-                `<div class="media-item">${m} <button onclick="removeQuestionMedia(${idx}, ${i})">×</button></div>`
-            ).join('') : '';
+            const mediaList = q.question.media && q.question.media.length > 0 ? 
+                q.question.media.map((fileName, i) => 
+                    createMediaPreview(fileName, idx, 'question', 'question')
+                ).join('') : '';
 
             const items = Object.entries(q.items).map(([key, item]) => {
-                const itemMedia = item.media && item.media.length > 0 ? item.media.map((m, i) => 
-                    `<div class="media-item">${m} <button onclick="removeTFItemMedia(${idx}, '${key}', ${i})">×</button></div>`
-                ).join('') : '';
+                const itemMedia = item.media && item.media.length > 0 ? 
+                    item.media.map((fileName, i) => 
+                        createMediaPreview(fileName, idx, 'tfitem', 'tfitem', key)
+                    ).join('') : '';
 
                 return `
                     <div class="tf-item">
@@ -644,23 +907,13 @@
                                 <option value="false" ${!item.correct ? 'selected' : ''}>Sai</option>
                             </select>
                         </div>
-                        ${item.media && item.media.length > 0 ? `
-                            <div class="media-upload">
-                                <label class="file-input-label">
-                                    + Thêm media
-                                    <input type="file" multiple onchange="addTFItemMedia(${idx}, '${key}', event)">
-                                </label>
-                                <div class="media-list">${itemMedia}</div>
-                            </div>
-                        ` : ''}
-                        ${(!item.media || item.media.length === 0) ? `
-                            <div class="media-upload">
-                                <label class="file-input-label">
-                                    + Thêm media
-                                    <input type="file" multiple onchange="addTFItemMedia(${idx}, '${key}', event)">
-                                </label>
-                            </div>
-                        ` : ''}
+                        <div class="media-upload">
+                            <label class="file-input-label">
+                                + Thêm media
+                                <input type="file" multiple onchange="addTFItemMedia(${idx}, '${key}', event)">
+                            </label>
+                            ${itemMedia ? `<div class="media-preview-container">${itemMedia}</div>` : ''}
+                        </div>
                     </div>
                 `;
             }).join('');
@@ -682,7 +935,7 @@
                             + Thêm media cho đề bài
                             <input type="file" multiple onchange="addQuestionMedia(${idx}, event)">
                         </label>
-                        ${mediaList ? `<div class="media-list">${mediaList}</div>` : ''}
+                        ${mediaList ? `<div class="media-preview-container">${mediaList}</div>` : ''}
                     </div>
                     <div style="margin-top: 15px;">
                         <label>Các mệnh đề</label>
@@ -731,17 +984,16 @@
 
         function deleteQuestion(idx) {
             if (confirm('Xóa câu hỏi này?')) {
-                // Xóa các media files liên quan đến câu hỏi này
+                stopAllMedia();
+                
                 const question = questions[idx];
                 
-                // Xóa media của câu hỏi chính
                 if (question.question.media) {
                     question.question.media.forEach(fileName => {
                         delete mediaFiles[fileName];
                     });
                 }
                 
-                // Xóa media của các lựa chọn
                 if (question.type === 'multiple_choice' && question.choices) {
                     Object.values(question.choices).forEach(choice => {
                         if (choice.media) {
@@ -785,7 +1037,6 @@
             questions[idx].items[key].correct = value === 'true';
         }
 
-        // Hàm tạo tên file duy nhất
         function generateUniqueFileName(originalName) {
             const timestamp = Date.now();
             const random = Math.random().toString(36).substring(2, 8);
@@ -805,7 +1056,7 @@
                 }
                 questions[idx].question.media.push(uniqueName);
             }
-            event.target.value = ''; // Reset input file
+            event.target.value = '';
             renderQuestions();
         }
 
@@ -827,7 +1078,7 @@
                 }
                 questions[idx].choices[key].media.push(uniqueName);
             }
-            event.target.value = ''; // Reset input file
+            event.target.value = '';
             renderQuestions();
         }
 
@@ -849,7 +1100,7 @@
                 }
                 questions[idx].items[key].media.push(uniqueName);
             }
-            event.target.value = ''; // Reset input file
+            event.target.value = '';
             renderQuestions();
         }
 
@@ -864,12 +1115,10 @@
             return questions.map(q => {
                 const exported = { ...q };
                 
-                // Ensure media arrays exist
                 if (!exported.question.media) {
                     exported.question.media = [];
                 }
                 
-                // Convert media arrays to string if only 1 file, or keep as array
                 if (exported.question.media.length > 0) {
                     exported.question.media = exported.question.media.length === 1 
                         ? exported.question.media[0] 
@@ -914,9 +1163,10 @@
 
         async function exportZip() {
             try {
+                stopAllMedia();
+                
                 const zip = new JSZip();
 
-                // Config
                 const config = {
                     metadata: {
                         title: document.getElementById('title').value,
@@ -936,11 +1186,9 @@
 
                 zip.file('config.yaml', jsyaml.dump(config));
 
-                // Questions
                 const questionsData = { questions: prepareQuestionsForExport() };
                 zip.file('questions.yaml', jsyaml.dump(questionsData));
 
-                // Media folder
                 if (Object.keys(mediaFiles).length > 0) {
                     const mediaFolder = zip.folder('media');
                     for (const [fileName, file] of Object.entries(mediaFiles)) {
@@ -949,7 +1197,6 @@
                     }
                 }
 
-                // Generate and download
                 const blob = await zip.generateAsync({ type: 'blob' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
@@ -967,9 +1214,10 @@
             if (!file) return;
 
             try {
+                stopAllMedia();
+                
                 const zip = await JSZip.loadAsync(file);
 
-                // Load config
                 if (!zip.file('config.yaml')) {
                     throw new Error('Không tìm thấy file config.yaml');
                 }
@@ -992,7 +1240,6 @@
                 document.getElementById('shuffleQuestions').checked = config.exam.shuffle_questions || false;
                 document.getElementById('shuffleAnswers').checked = config.exam.shuffle_answers || false;
 
-                // Load questions
                 if (!zip.file('questions.yaml')) {
                     throw new Error('Không tìm thấy file questions.yaml');
                 }
@@ -1007,7 +1254,6 @@
                     questions = questionsData.questions.map(q => {
                         const normalized = { ...q };
                         
-                        // Normalize media to arrays
                         if (normalized.question.media) {
                             normalized.question.media = Array.isArray(normalized.question.media) 
                                 ? normalized.question.media 
@@ -1042,7 +1288,6 @@
                     });
                 }
 
-                // Load media files
                 const mediaFolder = zip.folder('media');
                 if (mediaFolder) {
                     const mediaPromises = [];
@@ -1069,12 +1314,20 @@
         }
 
         function openPublishModal() {
+            stopAllMedia();
+            
             document.getElementById('publishModal').classList.add('active');
             document.getElementById('publishResult').innerHTML = '';
+            document.getElementById('uploadStatus').classList.add('hidden');
             turnstileToken = null;
-            document.getElementById('publishBtn').disabled = true;
+            publishedLink = null;
             
-            // Reset Turnstile
+            const publishBtn = document.getElementById('publishBtn');
+            publishBtn.disabled = true;
+            publishBtn.textContent = 'Xuất bản';
+            publishBtn.className = 'btn btn-success';
+            publishBtn.onclick = publishQuiz;
+            
             if (window.turnstile) {
                 window.turnstile.reset();
             }
@@ -1098,13 +1351,14 @@
             const publishBtn = document.getElementById('publishBtn');
             const loading = document.getElementById('publishLoading');
             const resultBox = document.getElementById('publishResult');
+            const uploadStatus = document.getElementById('uploadStatus');
 
             publishBtn.disabled = true;
             loading.style.display = 'block';
             resultBox.innerHTML = '';
+            uploadStatus.classList.remove('hidden');
 
             try {
-                // Generate ZIP
                 const zip = new JSZip();
 
                 const config = {
@@ -1129,7 +1383,6 @@
                 const questionsData = { questions: prepareQuestionsForExport() };
                 zip.file('questions.yaml', jsyaml.dump(questionsData));
 
-                // Add media files to ZIP
                 if (Object.keys(mediaFiles).length > 0) {
                     const mediaFolder = zip.folder('media');
                     for (const [fileName, file] of Object.entries(mediaFiles)) {
@@ -1141,7 +1394,6 @@
                 const blob = await zip.generateAsync({ type: 'blob' });
                 const zipFile = new File([blob], 'quiz_package.zip', { type: 'application/zip' });
 
-                // Upload
                 const formData = new FormData();
                 formData.append('file', zipFile);
                 formData.append('turnstileToken', turnstileToken);
@@ -1159,7 +1411,7 @@
 
                 if (result.success) {
                     const currentDomain = window.location.origin;
-                    const quizLink = `${currentDomain}/quizly?r=${encodeURIComponent(result.publicUrl)}`;
+                    publishedLink = `${currentDomain}/quizly?r=${encodeURIComponent(result.publicUrl)}`;
                     
                     resultBox.innerHTML = `
                         <div class="result-box">
@@ -1167,15 +1419,31 @@
                             <p><strong>File ID:</strong> ${result.fileId}</p>
                             <p><strong>Tên file:</strong> ${result.fileName}</p>
                             <p><strong>Link làm bài:</strong></p>
-                            <a href="${quizLink}" target="_blank">${quizLink}</a>
+                            <div class="link-container">
+                                <input type="text" id="quizLinkInput" value="${publishedLink}" readonly>
+                                <button class="btn btn-copy" onclick="copyLinkToClipboard()">📋 Copy</button>
+                            </div>
+                            <p style="margin-top: 10px; font-size: 12px; color: #718096;">
+                                <a href="${publishedLink}" target="_blank">Mở link trong tab mới</a>
+                            </p>
                         </div>
                     `;
+                    
+                    publishBtn.textContent = '📋 Copy link';
+                    publishBtn.className = 'btn btn-copy';
+                    publishBtn.onclick = copyLinkToClipboard;
+                    publishBtn.disabled = false;
                 } else {
                     resultBox.innerHTML = `
                         <div style="background: #fff5f5; border: 2px solid #fc8181; border-radius: 8px; padding: 15px; color: #c53030;">
                             <strong>❌ Lỗi:</strong> ${result.error}
                         </div>
                     `;
+                    
+                    publishBtn.textContent = 'Xuất bản';
+                    publishBtn.className = 'btn btn-success';
+                    publishBtn.onclick = publishQuiz;
+                    publishBtn.disabled = false;
                 }
             } catch (error) {
                 resultBox.innerHTML = `
@@ -1183,9 +1451,49 @@
                         <strong>❌ Lỗi:</strong> ${error.message}
                     </div>
                 `;
+                
+                publishBtn.textContent = 'Xuất bản';
+                publishBtn.className = 'btn btn-success';
+                publishBtn.onclick = publishQuiz;
+                publishBtn.disabled = false;
             } finally {
                 loading.style.display = 'none';
-                publishBtn.disabled = false;
+                uploadStatus.classList.add('hidden');
+            }
+        }
+
+        function copyLinkToClipboard() {
+            if (!publishedLink) return;
+            
+            const input = document.getElementById('quizLinkInput');
+            if (input) {
+                input.select();
+                input.setSelectionRange(0, 99999);
+                
+                try {
+                    navigator.clipboard.writeText(publishedLink).then(() => {
+                        const publishBtn = document.getElementById('publishBtn');
+                        const originalText = publishBtn.textContent;
+                        publishBtn.textContent = '✅ Đã copy!';
+                        publishBtn.disabled = true;
+                        
+                        setTimeout(() => {
+                            publishBtn.textContent = originalText;
+                            publishBtn.disabled = false;
+                        }, 2000);
+                    });
+                } catch (err) {
+                    document.execCommand('copy');
+                    const publishBtn = document.getElementById('publishBtn');
+                    const originalText = publishBtn.textContent;
+                    publishBtn.textContent = '✅ Đã copy!';
+                    publishBtn.disabled = true;
+                    
+                    setTimeout(() => {
+                        publishBtn.textContent = originalText;
+                        publishBtn.disabled = false;
+                    }, 2000);
+                }
             }
         }
 

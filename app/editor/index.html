@@ -8,6 +8,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
     <style>
+        /* Giữ nguyên CSS */
         * {
             margin: 0;
             padding: 0;
@@ -551,12 +552,12 @@
         }
 
         function renderMCQuestion(q, idx) {
-            const mediaList = q.question.media ? q.question.media.map((m, i) => 
+            const mediaList = q.question.media && q.question.media.length > 0 ? q.question.media.map((m, i) => 
                 `<div class="media-item">${m} <button onclick="removeQuestionMedia(${idx}, ${i})">×</button></div>`
             ).join('') : '';
 
             const choices = Object.entries(q.choices).map(([key, choice]) => {
-                const choiceMedia = choice.media ? choice.media.map((m, i) => 
+                const choiceMedia = choice.media && choice.media.length > 0 ? choice.media.map((m, i) => 
                     `<div class="media-item">${m} <button onclick="removeChoiceMedia(${idx}, '${key}', ${i})">×</button></div>`
                 ).join('') : '';
 
@@ -573,13 +574,23 @@
                                     placeholder="Nội dung đáp án ${key}" style="width: 100%;">
                             </label>
                         </div>
-                        <div class="media-upload">
-                            <label class="file-input-label">
-                                + Thêm media
-                                <input type="file" multiple onchange="addChoiceMedia(${idx}, '${key}', event)">
-                            </label>
-                            <div class="media-list">${choiceMedia}</div>
-                        </div>
+                        ${choice.media && choice.media.length > 0 ? `
+                            <div class="media-upload">
+                                <label class="file-input-label">
+                                    + Thêm media
+                                    <input type="file" multiple onchange="addChoiceMedia(${idx}, '${key}', event)">
+                                </label>
+                                <div class="media-list">${choiceMedia}</div>
+                            </div>
+                        ` : ''}
+                        ${(!choice.media || choice.media.length === 0) ? `
+                            <div class="media-upload">
+                                <label class="file-input-label">
+                                    + Thêm media
+                                    <input type="file" multiple onchange="addChoiceMedia(${idx}, '${key}', event)">
+                                </label>
+                            </div>
+                        ` : ''}
                     </div>
                 `;
             }).join('');
@@ -601,7 +612,7 @@
                             + Thêm media cho câu hỏi
                             <input type="file" multiple onchange="addQuestionMedia(${idx}, event)">
                         </label>
-                        <div class="media-list">${mediaList}</div>
+                        ${mediaList ? `<div class="media-list">${mediaList}</div>` : ''}
                     </div>
                     <div style="margin-top: 15px;">
                         <label>Đáp án (chọn đáp án đúng)</label>
@@ -612,12 +623,12 @@
         }
 
         function renderTFQuestion(q, idx) {
-            const mediaList = q.question.media ? q.question.media.map((m, i) => 
+            const mediaList = q.question.media && q.question.media.length > 0 ? q.question.media.map((m, i) => 
                 `<div class="media-item">${m} <button onclick="removeQuestionMedia(${idx}, ${i})">×</button></div>`
             ).join('') : '';
 
             const items = Object.entries(q.items).map(([key, item]) => {
-                const itemMedia = item.media ? item.media.map((m, i) => 
+                const itemMedia = item.media && item.media.length > 0 ? item.media.map((m, i) => 
                     `<div class="media-item">${m} <button onclick="removeTFItemMedia(${idx}, '${key}', ${i})">×</button></div>`
                 ).join('') : '';
 
@@ -633,13 +644,23 @@
                                 <option value="false" ${!item.correct ? 'selected' : ''}>Sai</option>
                             </select>
                         </div>
-                        <div class="media-upload">
-                            <label class="file-input-label">
-                                + Thêm media
-                                <input type="file" multiple onchange="addTFItemMedia(${idx}, '${key}', event)">
-                            </label>
-                            <div class="media-list">${itemMedia}</div>
-                        </div>
+                        ${item.media && item.media.length > 0 ? `
+                            <div class="media-upload">
+                                <label class="file-input-label">
+                                    + Thêm media
+                                    <input type="file" multiple onchange="addTFItemMedia(${idx}, '${key}', event)">
+                                </label>
+                                <div class="media-list">${itemMedia}</div>
+                            </div>
+                        ` : ''}
+                        ${(!item.media || item.media.length === 0) ? `
+                            <div class="media-upload">
+                                <label class="file-input-label">
+                                    + Thêm media
+                                    <input type="file" multiple onchange="addTFItemMedia(${idx}, '${key}', event)">
+                                </label>
+                            </div>
+                        ` : ''}
                     </div>
                 `;
             }).join('');
@@ -661,7 +682,7 @@
                             + Thêm media cho đề bài
                             <input type="file" multiple onchange="addQuestionMedia(${idx}, event)">
                         </label>
-                        <div class="media-list">${mediaList}</div>
+                        ${mediaList ? `<div class="media-list">${mediaList}</div>` : ''}
                     </div>
                     <div style="margin-top: 15px;">
                         <label>Các mệnh đề</label>
@@ -710,6 +731,35 @@
 
         function deleteQuestion(idx) {
             if (confirm('Xóa câu hỏi này?')) {
+                // Xóa các media files liên quan đến câu hỏi này
+                const question = questions[idx];
+                
+                // Xóa media của câu hỏi chính
+                if (question.question.media) {
+                    question.question.media.forEach(fileName => {
+                        delete mediaFiles[fileName];
+                    });
+                }
+                
+                // Xóa media của các lựa chọn
+                if (question.type === 'multiple_choice' && question.choices) {
+                    Object.values(question.choices).forEach(choice => {
+                        if (choice.media) {
+                            choice.media.forEach(fileName => {
+                                delete mediaFiles[fileName];
+                            });
+                        }
+                    });
+                } else if (question.type === 'true_false_group' && question.items) {
+                    Object.values(question.items).forEach(item => {
+                        if (item.media) {
+                            item.media.forEach(fileName => {
+                                delete mediaFiles[fileName];
+                            });
+                        }
+                    });
+                }
+                
                 questions.splice(idx, 1);
                 renderQuestions();
             }
@@ -735,13 +785,27 @@
             questions[idx].items[key].correct = value === 'true';
         }
 
+        // Hàm tạo tên file duy nhất
+        function generateUniqueFileName(originalName) {
+            const timestamp = Date.now();
+            const random = Math.random().toString(36).substring(2, 8);
+            const extension = originalName.split('.').pop();
+            const nameWithoutExt = originalName.substring(0, originalName.lastIndexOf('.'));
+            return `${nameWithoutExt}_${timestamp}_${random}.${extension}`;
+        }
+
         async function addQuestionMedia(idx, event) {
             const files = Array.from(event.target.files);
             for (const file of files) {
-                const fileName = file.name;
-                mediaFiles[fileName] = file;
-                questions[idx].question.media.push(fileName);
+                const uniqueName = generateUniqueFileName(file.name);
+                mediaFiles[uniqueName] = file;
+                
+                if (!questions[idx].question.media) {
+                    questions[idx].question.media = [];
+                }
+                questions[idx].question.media.push(uniqueName);
             }
+            event.target.value = ''; // Reset input file
             renderQuestions();
         }
 
@@ -755,10 +819,15 @@
         async function addChoiceMedia(idx, key, event) {
             const files = Array.from(event.target.files);
             for (const file of files) {
-                const fileName = file.name;
-                mediaFiles[fileName] = file;
-                questions[idx].choices[key].media.push(fileName);
+                const uniqueName = generateUniqueFileName(file.name);
+                mediaFiles[uniqueName] = file;
+                
+                if (!questions[idx].choices[key].media) {
+                    questions[idx].choices[key].media = [];
+                }
+                questions[idx].choices[key].media.push(uniqueName);
             }
+            event.target.value = ''; // Reset input file
             renderQuestions();
         }
 
@@ -772,10 +841,15 @@
         async function addTFItemMedia(idx, key, event) {
             const files = Array.from(event.target.files);
             for (const file of files) {
-                const fileName = file.name;
-                mediaFiles[fileName] = file;
-                questions[idx].items[key].media.push(fileName);
+                const uniqueName = generateUniqueFileName(file.name);
+                mediaFiles[uniqueName] = file;
+                
+                if (!questions[idx].items[key].media) {
+                    questions[idx].items[key].media = [];
+                }
+                questions[idx].items[key].media.push(uniqueName);
             }
+            event.target.value = ''; // Reset input file
             renderQuestions();
         }
 
@@ -790,30 +864,46 @@
             return questions.map(q => {
                 const exported = { ...q };
                 
+                // Ensure media arrays exist
+                if (!exported.question.media) {
+                    exported.question.media = [];
+                }
+                
                 // Convert media arrays to string if only 1 file, or keep as array
-                if (exported.question.media) {
+                if (exported.question.media.length > 0) {
                     exported.question.media = exported.question.media.length === 1 
                         ? exported.question.media[0] 
                         : exported.question.media;
-                    if (exported.question.media.length === 0) delete exported.question.media;
+                } else {
+                    delete exported.question.media;
                 }
 
                 if (q.type === 'multiple_choice') {
                     Object.keys(exported.choices).forEach(key => {
-                        if (exported.choices[key].media) {
+                        if (!exported.choices[key].media) {
+                            exported.choices[key].media = [];
+                        }
+                        
+                        if (exported.choices[key].media.length > 0) {
                             exported.choices[key].media = exported.choices[key].media.length === 1
                                 ? exported.choices[key].media[0]
                                 : exported.choices[key].media;
-                            if (exported.choices[key].media.length === 0) delete exported.choices[key].media;
+                        } else {
+                            delete exported.choices[key].media;
                         }
                     });
                 } else {
                     Object.keys(exported.items).forEach(key => {
-                        if (exported.items[key].media) {
+                        if (!exported.items[key].media) {
+                            exported.items[key].media = [];
+                        }
+                        
+                        if (exported.items[key].media.length > 0) {
                             exported.items[key].media = exported.items[key].media.length === 1
                                 ? exported.items[key].media[0]
                                 : exported.items[key].media;
-                            if (exported.items[key].media.length === 0) delete exported.items[key].media;
+                        } else {
+                            delete exported.items[key].media;
                         }
                     });
                 }
@@ -823,46 +913,53 @@
         }
 
         async function exportZip() {
-            const zip = new JSZip();
+            try {
+                const zip = new JSZip();
 
-            // Config
-            const config = {
-                metadata: {
-                    title: document.getElementById('title').value,
-                    subject: document.getElementById('subject').value,
-                    grade: document.getElementById('grade').value,
-                    author: document.getElementById('author').value
-                },
-                exam: {
-                    description: document.getElementById('description').value,
-                    duration_minutes: parseInt(document.getElementById('duration').value),
-                    start_time: document.getElementById('startTime').value.replace('T', ' '),
-                    end_time: document.getElementById('endTime').value.replace('T', ' '),
-                    shuffle_questions: document.getElementById('shuffleQuestions').checked,
-                    shuffle_answers: document.getElementById('shuffleAnswers').checked
+                // Config
+                const config = {
+                    metadata: {
+                        title: document.getElementById('title').value,
+                        subject: document.getElementById('subject').value,
+                        grade: document.getElementById('grade').value,
+                        author: document.getElementById('author').value
+                    },
+                    exam: {
+                        description: document.getElementById('description').value,
+                        duration_minutes: parseInt(document.getElementById('duration').value),
+                        start_time: document.getElementById('startTime').value.replace('T', ' '),
+                        end_time: document.getElementById('endTime').value.replace('T', ' '),
+                        shuffle_questions: document.getElementById('shuffleQuestions').checked,
+                        shuffle_answers: document.getElementById('shuffleAnswers').checked
+                    }
+                };
+
+                zip.file('config.yaml', jsyaml.dump(config));
+
+                // Questions
+                const questionsData = { questions: prepareQuestionsForExport() };
+                zip.file('questions.yaml', jsyaml.dump(questionsData));
+
+                // Media folder
+                if (Object.keys(mediaFiles).length > 0) {
+                    const mediaFolder = zip.folder('media');
+                    for (const [fileName, file] of Object.entries(mediaFiles)) {
+                        const arrayBuffer = await file.arrayBuffer();
+                        mediaFolder.file(fileName, arrayBuffer);
+                    }
                 }
-            };
 
-            zip.file('config.yaml', jsyaml.dump(config));
-
-            // Questions
-            const questionsData = { questions: prepareQuestionsForExport() };
-            zip.file('questions.yaml', jsyaml.dump(questionsData));
-
-            // Media folder
-            const mediaFolder = zip.folder('media');
-            for (const [fileName, file] of Object.entries(mediaFiles)) {
-                mediaFolder.file(fileName, file);
+                // Generate and download
+                const blob = await zip.generateAsync({ type: 'blob' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'quiz_package.zip';
+                a.click();
+                URL.revokeObjectURL(url);
+            } catch (error) {
+                alert('Lỗi khi xuất ZIP: ' + error.message);
             }
-
-            // Generate and download
-            const blob = await zip.generateAsync({ type: 'blob' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'quiz_package.zip';
-            a.click();
-            URL.revokeObjectURL(url);
         }
 
         async function importZip(event) {
@@ -873,6 +970,10 @@
                 const zip = await JSZip.loadAsync(file);
 
                 // Load config
+                if (!zip.file('config.yaml')) {
+                    throw new Error('Không tìm thấy file config.yaml');
+                }
+                
                 const configText = await zip.file('config.yaml').async('text');
                 const config = jsyaml.load(configText);
 
@@ -882,64 +983,78 @@
                 document.getElementById('author').value = config.metadata.author || '';
                 document.getElementById('description').value = config.exam.description || '';
                 document.getElementById('duration').value = config.exam.duration_minutes || 45;
-                document.getElementById('startTime').value = config.exam.start_time.replace(' ', 'T');
-                document.getElementById('endTime').value = config.exam.end_time.replace(' ', 'T');
-                document.getElementById('shuffleQuestions').checked = config.exam.shuffle_questions;
-                document.getElementById('shuffleAnswers').checked = config.exam.shuffle_answers;
+                if (config.exam.start_time) {
+                    document.getElementById('startTime').value = config.exam.start_time.replace(' ', 'T');
+                }
+                if (config.exam.end_time) {
+                    document.getElementById('endTime').value = config.exam.end_time.replace(' ', 'T');
+                }
+                document.getElementById('shuffleQuestions').checked = config.exam.shuffle_questions || false;
+                document.getElementById('shuffleAnswers').checked = config.exam.shuffle_answers || false;
 
                 // Load questions
+                if (!zip.file('questions.yaml')) {
+                    throw new Error('Không tìm thấy file questions.yaml');
+                }
+                
                 const questionsText = await zip.file('questions.yaml').async('text');
                 const questionsData = jsyaml.load(questionsText);
 
-                questions = questionsData.questions.map(q => {
-                    const normalized = { ...q };
-                    
-                    // Normalize media to arrays
-                    if (normalized.question.media) {
-                        normalized.question.media = Array.isArray(normalized.question.media) 
-                            ? normalized.question.media 
-                            : [normalized.question.media];
-                    } else {
-                        normalized.question.media = [];
-                    }
+                questions = [];
+                mediaFiles = {};
 
-                    if (q.type === 'multiple_choice') {
-                        Object.keys(normalized.choices).forEach(key => {
-                            if (normalized.choices[key].media) {
-                                normalized.choices[key].media = Array.isArray(normalized.choices[key].media)
-                                    ? normalized.choices[key].media
-                                    : [normalized.choices[key].media];
-                            } else {
-                                normalized.choices[key].media = [];
-                            }
-                        });
-                    } else {
-                        Object.keys(normalized.items).forEach(key => {
-                            if (normalized.items[key].media) {
-                                normalized.items[key].media = Array.isArray(normalized.items[key].media)
-                                    ? normalized.items[key].media
-                                    : [normalized.items[key].media];
-                            } else {
-                                normalized.items[key].media = [];
-                            }
-                        });
-                    }
+                if (questionsData.questions) {
+                    questions = questionsData.questions.map(q => {
+                        const normalized = { ...q };
+                        
+                        // Normalize media to arrays
+                        if (normalized.question.media) {
+                            normalized.question.media = Array.isArray(normalized.question.media) 
+                                ? normalized.question.media 
+                                : [normalized.question.media];
+                        } else {
+                            normalized.question.media = [];
+                        }
 
-                    return normalized;
-                });
+                        if (q.type === 'multiple_choice') {
+                            Object.keys(normalized.choices).forEach(key => {
+                                if (normalized.choices[key].media) {
+                                    normalized.choices[key].media = Array.isArray(normalized.choices[key].media)
+                                        ? normalized.choices[key].media
+                                        : [normalized.choices[key].media];
+                                } else {
+                                    normalized.choices[key].media = [];
+                                }
+                            });
+                        } else {
+                            Object.keys(normalized.items).forEach(key => {
+                                if (normalized.items[key].media) {
+                                    normalized.items[key].media = Array.isArray(normalized.items[key].media)
+                                        ? normalized.items[key].media
+                                        : [normalized.items[key].media];
+                                } else {
+                                    normalized.items[key].media = [];
+                                }
+                            });
+                        }
+
+                        return normalized;
+                    });
+                }
 
                 // Load media files
-                mediaFiles = {};
                 const mediaFolder = zip.folder('media');
                 if (mediaFolder) {
                     const mediaPromises = [];
                     mediaFolder.forEach((relativePath, zipEntry) => {
-                        mediaPromises.push(
-                            zipEntry.async('blob').then(blob => {
-                                const file = new File([blob], relativePath);
-                                mediaFiles[relativePath] = file;
-                            })
-                        );
+                        if (!zipEntry.dir) {
+                            mediaPromises.push(
+                                zipEntry.async('blob').then(blob => {
+                                    const file = new File([blob], relativePath);
+                                    mediaFiles[relativePath] = file;
+                                })
+                            );
+                        }
                     });
                     await Promise.all(mediaPromises);
                 }
@@ -948,6 +1063,8 @@
                 alert('Tải lên thành công!');
             } catch (error) {
                 alert('Lỗi khi đọc file ZIP: ' + error.message);
+            } finally {
+                event.target.value = '';
             }
         }
 
@@ -1012,9 +1129,13 @@
                 const questionsData = { questions: prepareQuestionsForExport() };
                 zip.file('questions.yaml', jsyaml.dump(questionsData));
 
-                const mediaFolder = zip.folder('media');
-                for (const [fileName, file] of Object.entries(mediaFiles)) {
-                    mediaFolder.file(fileName, file);
+                // Add media files to ZIP
+                if (Object.keys(mediaFiles).length > 0) {
+                    const mediaFolder = zip.folder('media');
+                    for (const [fileName, file] of Object.entries(mediaFiles)) {
+                        const arrayBuffer = await file.arrayBuffer();
+                        mediaFolder.file(fileName, arrayBuffer);
+                    }
                 }
 
                 const blob = await zip.generateAsync({ type: 'blob' });

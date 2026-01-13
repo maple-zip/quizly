@@ -358,10 +358,8 @@ exam:
   const questionsYaml = toYAML(data);
   zip.file('questions.yaml', questionsYaml);
 
-  const mediaFolder = zip.folder('media');
-  data.mediaFiles.forEach((blob, name) => {
-    mediaFolder.file(name, blob);
-  });
+  // Tạo thư mục media rỗng - không thêm bất kỳ file nào
+  zip.folder('media');
 
   return zip;
 }

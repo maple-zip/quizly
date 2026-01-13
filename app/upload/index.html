@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DOCX → Quizly ZIP</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-emerald-50 to-teal-50 min-h-screen p-6">
+
+<div class="max-w-2xl mx-auto">
+  <div class="bg-white rounded-2xl shadow-xl p-8 mb-6">
+    <h1 class="text-3xl font-bold text-emerald-800 mb-2">DOCX → Quizly</h1>
+    <p class="text-gray-600 mb-6">Tải lên file DOCX để chuyển đổi thành bài quiz và chỉnh sửa</p>
+    
+    <div class="space-y-4">
+      <div class="border-2 border-dashed border-emerald-300 rounded-xl p-8 text-center hover:border-emerald-500 transition">
+        <input type="file" id="docxInput" accept=".docx" class="hidden" onchange="handleFileUpload(this)">
+        <label for="docxInput" class="cursor-pointer">
+          <div class="text-emerald-600 mb-2">
+            <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+            </svg>
+          </div>
+          <p class="text-lg font-semibold text-gray-700">Nhấn để chọn file DOCX</p>
+          <p class="text-sm text-gray-500 mt-1">Hoặc kéo thả file vào đây</p>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div id="statusBox" class="hidden bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg">
+    <div class="flex items-center">
+      <svg class="animate-spin h-5 w-5 text-blue-600 mr-3" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+      <p id="statusText" class="text-blue-800 font-medium"></p>
+    </div>
+  </div>
+</div>
+
+<script>
+const DB_NAME = 'quizly_zip_storage';
+const STORE_NAME = 'zip_files';
+
+// Open IndexedDB
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, 1);
+    request.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+      }
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+// Save ZIP to IndexedDB
+async function saveZipToIndexedDB(zipBlob) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    const store = tx.objectStore(STORE_NAME);
+    const data = {
+      id: 'current_quiz',
+      blob: zipBlob,
+      timestamp: Date.now()
+    };
+    store.put(data).onsuccess = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+function showStatus(msg) {
+  const box = document.getElementById('statusBox');
+  const text = document.getElementById('statusText');
+  text.textContent = msg;
+  box.classList.remove('hidden');
+}
+
+async function handleFileUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  try {
+    showStatus('Đang đọc file DOCX...');
+    const arrayBuffer = await file.arrayBuffer();
+    
+    showStatus('Đang chuyển đổi sang HTML...');
+    const result = await mammoth.convertToHtml({ arrayBuffer });
+    const html = result.value;
+
+    showStatus('Đang phân tích câu hỏi...');
+    const parsedData = await parseHTMLString(html);
+
+    showStatus('Đang tạo file ZIP...');
+    const zip = await createQuizZip(parsedData);
+    const zipBlob = await zip.generateAsync({ type: 'blob' });
+
+    showStatus('Đang lưu vào bộ nhớ...');
+    await saveZipToIndexedDB(zipBlob);
+
+    showStatus('Hoàn tất! Đang chuyển hướng...');
+    
+    // Redirect to editor
+    setTimeout(() => {
+      const currentPath = window.location.pathname;
+      const editorPath = currentPath.replace('/upload', '/editor');
+      window.location.href = window.location.origin + editorPath;
+    }, 500);
+
+  } catch (err) {
+    console.error(err);
+    alert('Lỗi: ' + err.message);
+    document.getElementById('statusBox').classList.add('hidden');
+    input.value = '';
+  }
+}
+
+function dataURLtoBlob(dataURL) {
+  const parts = dataURL.split(',');
+  const header = parts[0];
+  const mime = header.match(/:(.*?);/)[1];
+  const binary = atob(parts[1]);
+  const u8 = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) u8[i] = binary.charCodeAt(i);
+  return { blob: new Blob([u8], { type: mime }), mime };
+}
+
+function makeSafeName(base, index, ext) {
+  return `${base}_${index}.${ext}`;
+}
+
+function toYAML(obj) {
+  function esc(s) {
+    if (s == null) return '""';
+    s = String(s);
+    if (s.match(/[:\n\r\-\"\']/)) {
+      return '"' + s.replace(/"/g, '\\"') + '"';
+    }
+    return s;
+  }
+  let lines = [];
+  
+  if (obj.questions) {
+    lines.push('questions:');
+    obj.questions.forEach(q => {
+      lines.push('- type: ' + q.type);
+      if (q.question) {
+        lines.push('  question:');
+        lines.push('    text: ' + esc(q.question.text || ''));
+        if (q.question.media) {
+          if (Array.isArray(q.question.media)) {
+            lines.push('    media:');
+            q.question.media.forEach(m => lines.push('      - ' + esc(m)));
+          } else {
+            lines.push('    media: ' + esc(q.question.media));
+          }
+        }
+      }
+      if (q.type === 'multiple_choice') {
+        lines.push('  choices:');
+        for (const key of Object.keys(q.choices)) {
+          const c = q.choices[key];
+          lines.push(`    ${key}:`);
+          lines.push('      text: ' + esc(c.text || ''));
+          if (c.media) {
+            if (Array.isArray(c.media)) {
+              lines.push('      media:');
+              c.media.forEach(m => lines.push('        - ' + esc(m)));
+            } else {
+              lines.push('      media: ' + esc(c.media));
+            }
+          }
+        }
+        lines.push('  correct: ' + (q.correct ? esc(q.correct) : '""'));
+      } else if (q.type === 'true_false_group') {
+        lines.push('  items:');
+        for (const key of Object.keys(q.items)) {
+          const it = q.items[key];
+          lines.push(`    ${key}:`);
+          lines.push('      text: ' + esc(it.text || ''));
+          if (it.media) {
+            if (Array.isArray(it.media)) {
+              lines.push('      media:');
+              it.media.forEach(m => lines.push('        - ' + esc(m)));
+            } else {
+              lines.push('      media: ' + esc(it.media));
+            }
+          }
+          if (typeof it.correct === 'boolean') lines.push('      correct: ' + (it.correct ? 'true' : 'false'));
+        }
+      }
+    });
+  }
+  return lines.join('\n');
+}
+
+async function parseHTMLString(htmlText) {
+  const doc = new DOMParser().parseFromString(htmlText, 'text/html');
+
+  const imgEls = Array.from(doc.querySelectorAll('img'));
+  const dataImgs = imgEls.filter(i => i.src && i.src.startsWith('data:'));
+  const mediaFiles = new Map();
+  let counter = 1;
+  
+  for (const img of dataImgs) {
+    try {
+      const { blob, mime } = dataURLtoBlob(img.src);
+      const ext = mime.split('/')[1].split(';')[0] || 'png';
+      const name = makeSafeName('media', counter++, ext);
+      mediaFiles.set(name, blob);
+      img.setAttribute('data-indexeddb-name', name);
+      img.removeAttribute('src');
+    } catch (e) {
+      console.error('store image failed', e);
+    }
+  }
+
+  const bodyNodes = Array.from(doc.body.childNodes);
+  let mode = 'mc';
+  const questions = [];
+  let i = 0;
+  
+  while (i < bodyNodes.length) {
+    const node = bodyNodes[i];
+    const text = (node.textContent || '').trim();
+    const lower = text.toLowerCase();
+    
+    if (lower.includes('đúng sai') || lower.includes('tn đúng sai') || lower.includes('câu hỏi tn')) {
+      mode = 'tf';
+      i++;
+      continue;
+    }
+
+    const isQStart = /^\s*(câu\s*\d+|\d+\.|câu\s*\d+[:.])/i.test(text);
+    
+    if (isQStart) {
+      const blockNodes = [node];
+      let j = i + 1;
+      
+      while (j < bodyNodes.length) {
+        const t = (bodyNodes[j].textContent || '').trim();
+        if (/^(câu\s*\d+|\d+\.|câu\s*\d+[:.])/i.test(t)) break;
+        if ((t.toLowerCase().includes('đúng sai') || t.toLowerCase().includes('ii.'))) break;
+        if (/^\s*[ivx]+\b\s*\./i.test(t)) break;
+        blockNodes.push(bodyNodes[j]);
+        j++;
+      }
+      i = j;
+      
+      const blockText = blockNodes.map(n => n.textContent).join('\n').trim();
+
+      const mediaNames = [];
+      for (const n of blockNodes) {
+        if (n.querySelectorAll) {
+          for (const im of Array.from(n.querySelectorAll('img'))) {
+            const nm = im.getAttribute('data-indexeddb-name');
+            if (nm) mediaNames.push(nm);
+          }
+        }
+      }
+
+      let norm = blockText.replace(/\r/g, '').replace(/\t/g, ' ');
+      norm = norm.replace(/\s*A\./g, '\nA.').replace(/\s*B\./g, '\nB.').replace(/\s*C\./g, '\nC.').replace(/\s*D\./g, '\nD.');
+      const lines = norm.split('\n').map(s => s.trim()).filter(Boolean);
+      
+      const choiceLines = lines.filter(l => /^[A-D]\./.test(l));
+
+      if (choiceLines.length >= 2 && mode === 'mc') {
+        let qtextLines = [];
+        for (const l of lines) {
+          if (/^[A-D]\./.test(l)) break;
+          qtextLines.push(l);
+        }
+        const qtext = qtextLines.join(' ').replace(/^(câu\s*\d+[:.]?)/i, '').trim();
+        
+        const choices = {};
+        const map = {};
+        for (const l of choiceLines) {
+          const m = l.match(/^([A-D])\.\s*(.*)$/);
+          if (m) map[m[1]] = m[2].trim();
+        }
+        ['A', 'B', 'C', 'D'].forEach(k => {
+          choices[k] = { text: map[k] || '' };
+        });
+        
+        questions.push({
+          type: 'multiple_choice',
+          question: {
+            text: qtext,
+            media: mediaNames.length ? (mediaNames.length === 1 ? mediaNames[0] : mediaNames) : undefined
+          },
+          choices,
+          correct: ''
+        });
+      } else if (mode === 'tf') {
+        let combined = blockText.replace(/\r/g, '').replace(/\t/g, ' ');
+        combined = combined.replace(/\s*a\)|\s*a\./gi, '\na.').replace(/\s*b\)|\s*b\./gi, '\nb.').replace(/\s*c\)|\s*c\./gi, '\nc.').replace(/\s*d\)|\s*d\./gi, '\nd.');
+        const itLines = combined.split('\n').map(s => s.trim()).filter(Boolean);
+        
+        let header = '';
+        if (!/^a\./i.test(itLines[0])) {
+          header = itLines.shift();
+        }
+        
+        const items = {};
+        for (const line of itLines) {
+          const m = line.match(/^([a-d])\.\s*(.*)/i);
+          if (m) items[m[1]] = { text: m[2].trim() };
+        }
+        
+        if (Object.keys(items).length > 0) {
+          questions.push({
+            type: 'true_false_group',
+            question: {
+              text: header || '',
+              media: mediaNames.length ? mediaNames : undefined
+            },
+            items
+          });
+        }
+      }
+    } else {
+      i++;
+    }
+  }
+
+  return { questions, mediaFiles };
+}
+
+async function createQuizZip(data) {
+  const zip = new JSZip();
+
+  // Default config
+  const config = `metadata:
+  title: "Đề thi mặc định"
+  subject: "Chưa phân loại"
+  grade: "12"
+  author: "Giáo viên"
+
+exam:
+  description: "Bài thi được tạo từ DOCX"
+  duration_minutes: 45
+  start_time: "2025-01-01T00:00:00"
+  end_time: "2025-12-31T23:59:59"
+  shuffle_questions: true
+  shuffle_answers: true`;
+
+  zip.file('config.yaml', config);
+
+  const questionsYaml = toYAML(data);
+  zip.file('questions.yaml', questionsYaml);
+
+  const mediaFolder = zip.folder('media');
+  data.mediaFiles.forEach((blob, name) => {
+    mediaFolder.file(name, blob);
+  });
+
+  return zip;
+}
+
+// Drag and drop support
+document.addEventListener('DOMContentLoaded', () => {
+  const dropArea = document.querySelector('.border-dashed');
+  
+  ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+    dropArea.addEventListener(eventName, preventDefaults, false);
+  });
+
+  function preventDefaults(e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+
+  ['dragenter', 'dragover'].forEach(eventName => {
+    dropArea.addEventListener(eventName, () => {
+      dropArea.classList.add('border-emerald-500', 'bg-emerald-50');
+    }, false);
+  });
+
+  ['dragleave', 'drop'].forEach(eventName => {
+    dropArea.addEventListener(eventName, () => {
+      dropArea.classList.remove('border-emerald-500', 'bg-emerald-50');
+    }, false);
+  });
+
+  dropArea.addEventListener('drop', (e) => {
+    const dt = e.dataTransfer;
+    const files = dt.files;
+    const input = document.getElementById('docxInput');
+    input.files = files;
+    handleFileUpload(input);
+  }, false);
+});
+</script>
+
+</body>
+</html>

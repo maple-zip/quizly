@@ -7,662 +7,162 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Giữ nguyên CSS cũ, thêm CSS mới cho media preview */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: #f5f7fa;
-            color: #2c3e50;
-        }
-
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px 30px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-
-        .header h1 {
-            font-size: 24px;
-            margin-bottom: 5px;
-        }
-
-        .header p {
-            opacity: 0.9;
-            font-size: 14px;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 30px auto;
-            padding: 0 20px;
-        }
-
-        .actions {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-        }
-
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .btn-primary {
-            background: #667eea;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #5568d3;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn-success {
-            background: #48bb78;
-            color: white;
-        }
-
-        .btn-success:hover {
-            background: #38a169;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
-        }
-
-        .btn-secondary {
-            background: #e2e8f0;
-            color: #4a5568;
-        }
-
-        .btn-secondary:hover {
-            background: #cbd5e0;
-        }
-
-        .btn-copy {
-            background: #4299e1;
-            color: white;
-        }
-
-        .btn-copy:hover {
-            background: #3182ce;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(66, 153, 225, 0.4);
-        }
-
-        .section {
-            background: white;
-            border-radius: 12px;
-            padding: 25px;
-            margin-bottom: 20px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-
-        .section-title {
-            font-size: 18px;
-            font-weight: 700;
-            margin-bottom: 20px;
-            color: #2d3748;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-        }
-
-        label {
-            font-size: 13px;
-            font-weight: 600;
-            color: #4a5568;
-            margin-bottom: 6px;
-        }
-
-        input[type="text"],
-        input[type="number"],
-        input[type="datetime-local"],
-        textarea,
-        select {
-            padding: 10px 12px;
-            border: 2px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 14px;
-            transition: all 0.3s;
-        }
-
-        input:focus,
-        textarea:focus,
-        select:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        textarea {
-            resize: vertical;
-            min-height: 80px;
-            font-family: inherit;
-        }
-
-        .checkbox-group {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-top: 8px;
-        }
-
-        input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            cursor: pointer;
-        }
-
-        .question-item {
-            background: #f8fafc;
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 15px;
-            position: relative;
-        }
-
-        .question-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .question-number {
-            font-weight: 700;
-            font-size: 16px;
-            color: #667eea;
-        }
-
-        .question-actions {
-            display: flex;
-            gap: 8px;
-        }
-
-        .btn-small {
-            padding: 6px 12px;
-            font-size: 12px;
-            border-radius: 6px;
-        }
-
-        .btn-danger {
-            background: #f56565;
-            color: white;
-        }
-
-        .btn-danger:hover {
-            background: #e53e3e;
-        }
-
-        .choice-item,
-        .tf-item {
-            background: white;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 10px;
-        }
-
-        .choice-header,
-        .tf-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 8px;
-        }
-
-        .choice-label {
-            background: #667eea;
-            color: white;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 14px;
-        }
-
-        .media-upload {
-            margin-top: 10px;
-        }
-
-        .media-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 8px;
-        }
-
-        .media-item {
-            background: #edf2f7;
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .media-item button {
-            background: #fc8181;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            padding: 2px 6px;
-            cursor: pointer;
-            font-size: 11px;
-        }
-
-        /* CSS mới cho media preview */
-        .media-preview-container {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-top: 8px;
-        }
-
-        .media-preview {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 10px;
-            max-width: 100%;
-        }
-
-        .media-preview img {
-            max-width: 100%;
-            max-height: 200px;
-            border-radius: 4px;
-            display: block;
-            margin: 0 auto;
-        }
-
-        .media-preview video,
-        .media-preview audio {
-            width: 100%;
-            max-width: 400px;
-            border-radius: 4px;
-            display: block;
-            margin: 0 auto;
-        }
-
-        .media-controls {
-            display: flex;
-            gap: 5px;
-            margin-top: 5px;
-            justify-content: center;
-        }
-
-        .media-controls button {
-            padding: 4px 8px;
-            font-size: 11px;
-            border: none;
-            border-radius: 4px;
-            background: #667eea;
-            color: white;
-            cursor: pointer;
-        }
-
-        .media-controls button:hover {
-            background: #5568d3;
-        }
-
-        .media-controls button.stop {
-            background: #f56565;
-        }
-
-        .media-controls button.stop:hover {
-            background: #e53e3e;
-        }
-
-        .add-question-btn {
-            width: 100%;
-            padding: 15px;
-            background: #f7fafc;
-            border: 2px dashed #cbd5e0;
-            border-radius: 12px;
-            color: #4a5568;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .add-question-btn:hover {
-            background: #edf2f7;
-            border-color: #667eea;
-            color: #667eea;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal.active {
-            display: flex;
-        }
-
-        .modal-content {
-            background: white;
-            border-radius: 12px;
-            padding: 30px;
-            max-width: 500px;
-            width: 90%;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-
-        .modal-header {
-            font-size: 20px;
-            font-weight: 700;
-            margin-bottom: 20px;
-            color: #2d3748;
-        }
-
-        .modal-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .publish-modal .turnstile-container {
-            margin: 20px 0;
-            display: flex;
-            justify-content: center;
-        }
-
-        .loading {
-            display: none;
-            text-align: center;
-            padding: 20px;
-        }
-
-        .spinner {
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #667eea;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 10px;
-        }
-
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-
-        .result-box {
-            background: #f0fff4;
-            border: 2px solid #48bb78;
-            border-radius: 8px;
-            padding: 15px;
-            margin-top: 15px;
-        }
-
-        .result-box h3 {
-            color: #22543d;
-            margin-bottom: 10px;
-        }
-
-        .result-box a {
-            color: #667eea;
-            word-break: break-all;
-            text-decoration: none;
-            display: inline-block;
-            margin-bottom: 10px;
-        }
-
-        .result-box a:hover {
-            text-decoration: underline;
-        }
-
-        .link-container {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .link-container input {
-            flex: 1;
-            padding: 10px;
-            border: 2px solid #e2e8f0;
-            border-radius: 6px;
-            font-size: 14px;
-            font-family: monospace;
-        }
-
-        .link-container button {
-            white-space: nowrap;
-        }
-
-        input[type="file"] {
-            display: none;
-        }
-
-        .file-input-label {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 16px;
-            background: #edf2f7;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 600;
-            color: #4a5568;
-            transition: all 0.3s;
-        }
-
-        .file-input-label:hover {
-            background: #e2e8f0;
-        }
-
-        /* Thêm style cho upload status */
-        .upload-status {
-            margin-top: 10px;
-            font-size: 12px;
-            color: #718096;
-            text-align: center;
-        }
-
-        .upload-status.hidden {
-            display: none;
-        }
-
-        /* Ẩn tên file trong media-item */
-        .media-item span {
-            display: none;
-        }
-
-        /* Style cho media item khi không có preview */
-        .media-item.no-preview {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .media-item.no-preview span {
-            display: inline-block;
-            font-size: 12px;
-            color: #4a5568;
-        }
-
-        @media (max-width: 768px) {
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .link-container {
-                flex-direction: column;
-            }
-            
-            .media-controls {
-                flex-wrap: wrap;
-                justify-content: center;
-            }
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #10b981;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
         }
     </style>
 </head>
-<body>
-    <div class="header">
-        <h1>📝 Quizly Editor</h1>
-        <p>Soạn bài kiểm tra trực tuyến - Hỗ trợ trắc nghiệm và đúng/sai</p>
+<body class="bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
+    <!-- Header -->
+    <div class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-6 py-6">
+            <h1 class="text-3xl font-bold mb-1">📝 Quizly Editor</h1>
+            <p class="text-indigo-100">Soạn bài kiểm tra trực tuyến - Hỗ trợ trắc nghiệm và Đúng/Sai</p>
+        </div>
     </div>
 
-    <div class="container">
-        <div class="actions">
-            <button class="btn btn-primary" onclick="exportZip()">💾 Tải xuống ZIP</button>
-            <button class="btn btn-success" onclick="openPublishModal()">🚀 Xuất bản</button>
-            <label class="btn btn-secondary file-input-label">
+    <div class="max-w-7xl mx-auto px-6 py-8">
+        <!-- Actions -->
+        <div class="flex flex-wrap gap-3 mb-8">
+            <button onclick="exportZip()" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-md transition transform hover:scale-105 flex items-center gap-2">
+                💾 Tải xuống ZIP
+            </button>
+            <button onclick="openPublishModal()" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg shadow-md transition transform hover:scale-105 flex items-center gap-2">
+                🚀 Xuất bản
+            </button>
+            <label class="px-6 py-3 bg-slate-600 hover:bg-slate-700 text-white font-semibold rounded-lg shadow-md transition cursor-pointer flex items-center gap-2">
                 📁 Tải lên ZIP
-                <input type="file" accept=".zip" onchange="importZip(event)">
+                <input type="file" accept=".zip" onchange="importZip(event)" class="hidden">
             </label>
+            <button onclick="clearAll()" class="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg shadow-md transition transform hover:scale-105 flex items-center gap-2">
+                🗑️ Xóa tất cả
+            </button>
         </div>
 
         <!-- Config Section -->
-        <div class="section">
-            <div class="section-title">⚙️ Cấu hình đề thi</div>
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>Tiêu đề</label>
-                    <input type="text" id="title" placeholder="Ví dụ: Kiểm tra Toán 10">
+        <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                ⚙️ Cấu hình đề thi
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Tiêu đề</label>
+                    <input type="text" id="title" placeholder="Ví dụ: Kiểm tra Toán 10" class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition">
                 </div>
-                <div class="form-group">
-                    <label>Môn học</label>
-                    <input type="text" id="subject" placeholder="Ví dụ: Toán">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Môn học</label>
+                    <input type="text" id="subject" placeholder="Ví dụ: Toán" class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition">
                 </div>
-                <div class="form-group">
-                    <label>Khối lớp</label>
-                    <input type="text" id="grade" placeholder="Ví dụ: 10">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Khối lớp</label>
+                    <input type="text" id="grade" placeholder="Ví dụ: 10" class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition">
                 </div>
-                <div class="form-group">
-                    <label>Tác giả</label>
-                    <input type="text" id="author" placeholder="Tên giáo viên">
-                </div>
-            </div>
-            <div class="form-grid" style="margin-top: 20px;">
-                <div class="form-group">
-                    <label>Mô tả</label>
-                    <textarea id="description" placeholder="Mô tả về bài kiểm tra"></textarea>
-                </div>
-                <div class="form-group">
-                    <label>Thời gian (phút, 0 = không giới hạn)</label>
-                    <input type="number" id="duration" value="45" min="0">
-                </div>
-                <div class="form-group">
-                    <label>Thời gian bắt đầu</label>
-                    <input type="datetime-local" id="startTime">
-                </div>
-                <div class="form-group">
-                    <label>Thời gian kết thúc</label>
-                    <input type="datetime-local" id="endTime">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Tác giả</label>
+                    <input type="text" id="author" placeholder="Tên giáo viên" class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition">
                 </div>
             </div>
-            <div class="form-grid" style="margin-top: 15px;">
-                <div class="checkbox-group">
-                    <input type="checkbox" id="shuffleQuestions">
-                    <label for="shuffleQuestions">Xáo trộn câu hỏi</label>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Mô tả</label>
+                    <textarea id="description" placeholder="Mô tả về bài kiểm tra" class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition min-h-[80px]"></textarea>
                 </div>
-                <div class="checkbox-group">
-                    <input type="checkbox" id="shuffleAnswers">
-                    <label for="shuffleAnswers">Xáo trộn đáp án</label>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Thời gian (phút, 0 = không giới hạn)</label>
+                    <input type="number" id="duration" value="45" min="0" class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition">
                 </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Thời gian bắt đầu</label>
+                    <input type="datetime-local" id="startTime" class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Thời gian kết thúc</label>
+                    <input type="datetime-local" id="endTime" class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition">
+                </div>
+            </div>
+            <div class="flex flex-wrap gap-6">
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" id="shuffleQuestions" class="w-5 h-5 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500">
+                    <span class="text-sm font-medium text-gray-700">Xáo trộn câu hỏi</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" id="shuffleAnswers" class="w-5 h-5 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500">
+                    <span class="text-sm font-medium text-gray-700">Xáo trộn đáp án</span>
+                </label>
             </div>
         </div>
 
         <!-- Questions Section -->
-        <div class="section">
-            <div class="section-title">❓ Câu hỏi</div>
-            <div id="questionsList"></div>
-            <button class="add-question-btn" onclick="openAddQuestionModal()">+ Thêm câu hỏi</button>
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                ❓ Câu hỏi
+            </h2>
+            <div id="questionsList" class="space-y-4 mb-4"></div>
+            <button onclick="openAddQuestionModal()" class="w-full py-4 border-2 border-dashed border-gray-300 rounded-xl text-gray-600 font-semibold hover:border-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 transition">
+                + Thêm câu hỏi
+            </button>
         </div>
     </div>
 
     <!-- Add Question Modal -->
-    <div class="modal" id="addQuestionModal">
-        <div class="modal-content">
-            <div class="modal-header">Chọn loại câu hỏi</div>
-            <button class="btn btn-primary" style="width: 100%; margin-bottom: 10px;" onclick="addQuestion('multiple_choice')">
-                📝 Trắc nghiệm (ABCD)
-            </button>
-            <button class="btn btn-primary" style="width: 100%;" onclick="addQuestion('true_false_group')">
-                ✅ Đúng/Sai
-            </button>
-            <div class="modal-actions">
-                <button class="btn btn-secondary" style="width: 100%;" onclick="closeAddQuestionModal()">Hủy</button>
+    <div id="addQuestionModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
+            <h3 class="text-2xl font-bold text-gray-800 mb-6">Chọn loại câu hỏi</h3>
+            <div class="space-y-3">
+                <button onclick="addQuestion('multiple_choice')" class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition">
+                    📝 Trắc nghiệm (ABCD)
+                </button>
+                <button onclick="addQuestion('true_false_group')" class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition">
+                    ✅ Đúng/Sai
+                </button>
+                <button onclick="closeAddQuestionModal()" class="w-full py-4 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg transition">
+                    Hủy
+                </button>
             </div>
         </div>
     </div>
 
     <!-- Publish Modal -->
-    <div class="modal publish-modal" id="publishModal">
-        <div class="modal-content">
-            <div class="modal-header">🚀 Xuất bản lên Quizly</div>
-            <p style="margin-bottom: 20px; color: #718096;">
-                Hệ thống sẽ tạo file ZIP và tải lên server, sau đó trả về link làm bài.
-            </p>
+    <div id="publishModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <h3 class="text-2xl font-bold text-gray-800 mb-4">🚀 Xuất bản lên Quizly</h3>
+            <p class="text-gray-600 mb-6">Hệ thống sẽ tạo file ZIP và tải lên server, sau đó trả về link làm bài.</p>
             
-            <!-- Ẩn thông tin upload -->
-            <div class="upload-status hidden" id="uploadStatus">
+            <div id="uploadStatus" class="hidden text-center text-gray-600 mb-4">
                 Đang xử lý upload...
             </div>
             
-            <div class="turnstile-container">
-                <div class="cf-turnstile" 
-                     data-sitekey="0x4AAAAAACKdJDqJa3PzSepQ"
-                     data-callback="onTurnstileSuccess"></div>
+            <div class="flex justify-center mb-6">
+                <div class="cf-turnstile" data-sitekey="0x4AAAAAACKdJDqJa3PzSepQ" data-callback="onTurnstileSuccess"></div>
             </div>
 
-            <div class="loading" id="publishLoading">
-                <div class="spinner"></div>
-                <p>Đang xuất bản...</p>
+            <div id="publishLoading" class="hidden text-center py-6">
+                <div class="spinner mx-auto mb-3"></div>
+                <p class="text-gray-600 font-medium">Đang xuất bản...</p>
             </div>
 
             <div id="publishResult"></div>
 
-            <div class="modal-actions">
-                <button class="btn btn-success" id="publishBtn" onclick="publishQuiz()" disabled>Xuất bản</button>
-                <button class="btn btn-secondary" onclick="closePublishModal()">Đóng</button>
+            <div class="flex gap-3 mt-6">
+                <button id="publishBtn" onclick="publishQuiz()" disabled class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed">
+                    Xuất bản
+                </button>
+                <button onclick="closePublishModal()" class="flex-1 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg transition">
+                    Đóng
+                </button>
             </div>
         </div>
     </div>
@@ -673,17 +173,172 @@
             supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5sb3BmcGx3enJrbXZjemJ3bmdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc1MzI2MjcsImV4cCI6MjA4MzEwODYyN30.188yIrRkMwu9blprUnzpXjyg9PmS_Thiiafey27CXL8'
         };
 
+        const DB_NAME = 'quizly_zip_storage';
+        const STORE_NAME = 'zip_files';
+
         let questions = [];
         let mediaFiles = {};
         let turnstileToken = null;
-        let currentlyPlayingMedia = null;
         let publishedLink = null;
 
-        // Initialize dates
-        const now = new Date();
-        const nextYear = new Date(now.getFullYear() + 1, 11, 31, 23, 59);
-        document.getElementById('startTime').value = now.toISOString().slice(0, 16);
-        document.getElementById('endTime').value = nextYear.toISOString().slice(0, 16);
+        // IndexedDB functions
+        function openDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, 1);
+                request.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains(STORE_NAME)) {
+                        db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                    }
+                };
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        async function loadZipFromIndexedDB() {
+            try {
+                const db = await openDB();
+                return new Promise((resolve, reject) => {
+                    const tx = db.transaction(STORE_NAME, 'readonly');
+                    const store = tx.objectStore(STORE_NAME);
+                    const request = store.get('current_quiz');
+                    request.onsuccess = () => {
+                        if (request.result && request.result.blob) {
+                            resolve(request.result.blob);
+                        } else {
+                            resolve(null);
+                        }
+                    };
+                    request.onerror = () => reject(request.error);
+                });
+            } catch (err) {
+                console.error('Error loading from IndexedDB:', err);
+                return null;
+            }
+        }
+
+        async function clearIndexedDB() {
+            try {
+                const db = await openDB();
+                return new Promise((resolve, reject) => {
+                    const tx = db.transaction(STORE_NAME, 'readwrite');
+                    const store = tx.objectStore(STORE_NAME);
+                    const request = store.delete('current_quiz');
+                    request.onsuccess = () => resolve();
+                    request.onerror = () => reject(request.error);
+                });
+            } catch (err) {
+                console.error('Error clearing IndexedDB:', err);
+            }
+        }
+
+        // Initialize
+        async function init() {
+            const now = new Date();
+            const nextYear = new Date(now.getFullYear() + 1, 11, 31, 23, 59);
+            document.getElementById('startTime').value = now.toISOString().slice(0, 16);
+            document.getElementById('endTime').value = nextYear.toISOString().slice(0, 16);
+
+            // Load from IndexedDB if available
+            const zipBlob = await loadZipFromIndexedDB();
+            if (zipBlob) {
+                try {
+                    await loadZipFromBlob(zipBlob);
+                    await clearIndexedDB(); // Clear after successful load
+                } catch (err) {
+                    console.error('Error loading ZIP from IndexedDB:', err);
+                }
+            }
+
+            renderQuestions();
+        }
+
+        async function loadZipFromBlob(blob) {
+            const zip = await JSZip.loadAsync(blob);
+
+            if (zip.file('config.yaml')) {
+                const configText = await zip.file('config.yaml').async('text');
+                const config = jsyaml.load(configText);
+
+                document.getElementById('title').value = config.metadata.title || '';
+                document.getElementById('subject').value = config.metadata.subject || '';
+                document.getElementById('grade').value = config.metadata.grade || '';
+                document.getElementById('author').value = config.metadata.author || '';
+                document.getElementById('description').value = config.exam.description || '';
+                document.getElementById('duration').value = config.exam.duration_minutes || 45;
+                if (config.exam.start_time) {
+                    document.getElementById('startTime').value = config.exam.start_time.replace(' ', 'T');
+                }
+                if (config.exam.end_time) {
+                    document.getElementById('endTime').value = config.exam.end_time.replace(' ', 'T');
+                }
+                document.getElementById('shuffleQuestions').checked = config.exam.shuffle_questions || false;
+                document.getElementById('shuffleAnswers').checked = config.exam.shuffle_answers || false;
+            }
+
+            if (zip.file('questions.yaml')) {
+                const questionsText = await zip.file('questions.yaml').async('text');
+                const questionsData = jsyaml.load(questionsText);
+
+                questions = [];
+                mediaFiles = {};
+
+                if (questionsData.questions) {
+                    questions = questionsData.questions.map(q => {
+                        const normalized = { ...q };
+                        
+                        if (normalized.question.media) {
+                            normalized.question.media = Array.isArray(normalized.question.media) 
+                                ? normalized.question.media 
+                                : [normalized.question.media];
+                        } else {
+                            normalized.question.media = [];
+                        }
+
+                        if (q.type === 'multiple_choice') {
+                            Object.keys(normalized.choices).forEach(key => {
+                                if (normalized.choices[key].media) {
+                                    normalized.choices[key].media = Array.isArray(normalized.choices[key].media)
+                                        ? normalized.choices[key].media
+                                        : [normalized.choices[key].media];
+                                } else {
+                                    normalized.choices[key].media = [];
+                                }
+                            });
+                        } else {
+                            Object.keys(normalized.items).forEach(key => {
+                                if (normalized.items[key].media) {
+                                    normalized.items[key].media = Array.isArray(normalized.items[key].media)
+                                        ? normalized.items[key].media
+                                        : [normalized.items[key].media];
+                                } else {
+                                    normalized.items[key].media = [];
+                                }
+                            });
+                        }
+
+                        return normalized;
+                    });
+                }
+
+                const mediaFolder = zip.folder('media');
+                if (mediaFolder) {
+                    const mediaPromises = [];
+                    mediaFolder.forEach((relativePath, zipEntry) => {
+                        if (!zipEntry.dir) {
+                            mediaPromises.push(
+                                zipEntry.async('blob').then(blob => {
+                                    const file = new File([blob], relativePath);
+                                    mediaFiles[relativePath] = file;
+                                })
+                            );
+                        }
+                    });
+                    await Promise.all(mediaPromises);
+                }
+            }
+        }
 
         function renderQuestions() {
             const list = document.getElementById('questionsList');
@@ -717,64 +372,51 @@
             if (mediaType === 'image') {
                 const url = URL.createObjectURL(file);
                 previewHTML = `
-                    <div class="media-preview">
-                        <img src="${url}" alt="Hình ảnh" onload="URL.revokeObjectURL(this.src)">
-                        <div class="media-controls">
-                            <button onclick="downloadMedia('${fileName}')">Tải xuống</button>
+                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                        <img src="${url}" alt="Hình ảnh" onload="URL.revokeObjectURL(this.src)" class="max-w-full max-h-48 rounded mx-auto">
+                        <div class="flex gap-2 mt-2 justify-center">
+                            <button onclick="downloadMedia('${fileName}')" class="px-3 py-1 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-700">Tải xuống</button>
+                            <button onclick="${getRemoveMediaFunction(idx, type, context, key, fileName)}" class="px-3 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700">Xóa</button>
                         </div>
                     </div>
                 `;
             } else if (mediaType === 'audio') {
                 const url = URL.createObjectURL(file);
                 previewHTML = `
-                    <div class="media-preview">
-                        <audio id="audio_${fileName.replace(/[^a-zA-Z0-9]/g, '_')}" 
-                               controls 
-                               onplay="pauseOtherMedia(this)">
+                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                        <audio controls class="w-full max-w-md mx-auto">
                             <source src="${url}" type="audio/${file.name.split('.').pop()}">
-                            Trình duyệt không hỗ trợ phát âm thanh.
                         </audio>
-                        <div class="media-controls">
-                            <button onclick="downloadMedia('${fileName}')">Tải xuống</button>
-                            <button class="stop" onclick="stopAllMedia()">Dừng tất cả</button>
+                        <div class="flex gap-2 mt-2 justify-center">
+                            <button onclick="downloadMedia('${fileName}')" class="px-3 py-1 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-700">Tải xuống</button>
+                            <button onclick="${getRemoveMediaFunction(idx, type, context, key, fileName)}" class="px-3 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700">Xóa</button>
                         </div>
                     </div>
                 `;
             } else if (mediaType === 'video') {
                 const url = URL.createObjectURL(file);
                 previewHTML = `
-                    <div class="media-preview">
-                        <video id="video_${fileName.replace(/[^a-zA-Z0-9]/g, '_')}" 
-                               controls 
-                               width="300"
-                               onplay="pauseOtherMedia(this)">
+                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                        <video controls class="max-w-full max-h-64 rounded mx-auto">
                             <source src="${url}" type="video/${file.name.split('.').pop()}">
-                            Trình duyệt không hỗ trợ phát video.
                         </video>
-                        <div class="media-controls">
-                            <button onclick="downloadMedia('${fileName}')">Tải xuống</button>
-                            <button class="stop" onclick="stopAllMedia()">Dừng tất cả</button>
+                        <div class="flex gap-2 mt-2 justify-center">
+                            <button onclick="downloadMedia('${fileName}')" class="px-3 py-1 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-700">Tải xuống</button>
+                            <button onclick="${getRemoveMediaFunction(idx, type, context, key, fileName)}" class="px-3 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700">Xóa</button>
                         </div>
                     </div>
                 `;
             } else {
-                // Nếu là file không thể preview, chỉ hiển thị nút xóa và tải xuống
                 return `
-                    <div class="media-item no-preview">
-                        <span>${fileName}</span>
-                        <button onclick="${getRemoveMediaFunction(idx, type, context, key, fileName)}">×</button>
-                        <button onclick="downloadMedia('${fileName}')" style="padding: 2px 6px; font-size: 11px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">Tải xuống</button>
+                    <div class="flex items-center gap-2 bg-gray-100 px-3 py-2 rounded">
+                        <span class="text-sm text-gray-700">${fileName}</span>
+                        <button onclick="downloadMedia('${fileName}')" class="px-2 py-1 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-700">Tải</button>
+                        <button onclick="${getRemoveMediaFunction(idx, type, context, key, fileName)}" class="px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700">×</button>
                     </div>
                 `;
             }
 
-            return `
-                <div class="media-item">
-                    <!-- Đã ẩn tên file -->
-                    <button onclick="${getRemoveMediaFunction(idx, type, context, key, fileName)}">×</button>
-                    ${previewHTML}
-                </div>
-            `;
+            return previewHTML;
         }
 
         function getRemoveMediaFunction(idx, type, context, key, fileName) {
@@ -788,24 +430,6 @@
                 const mediaIdx = questions[idx].items[key].media.indexOf(fileName);
                 return `removeTFItemMedia(${idx}, '${key}', ${mediaIdx})`;
             }
-        }
-
-        function pauseOtherMedia(currentElement) {
-            currentlyPlayingMedia = currentElement;
-            
-            document.querySelectorAll('audio, video').forEach(media => {
-                if (media !== currentElement && !media.paused) {
-                    media.pause();
-                }
-            });
-        }
-
-        function stopAllMedia() {
-            document.querySelectorAll('audio, video').forEach(media => {
-                media.pause();
-                media.currentTime = 0;
-            });
-            currentlyPlayingMedia = null;
         }
 
         function downloadMedia(fileName) {
@@ -822,62 +446,60 @@
 
         function renderMCQuestion(q, idx) {
             const mediaList = q.question.media && q.question.media.length > 0 ? 
-                q.question.media.map((fileName, i) => 
+                `<div class="space-y-2 mt-3">${q.question.media.map(fileName => 
                     createMediaPreview(fileName, idx, 'question', 'question')
-                ).join('') : '';
+                ).join('')}</div>` : '';
 
             const choices = Object.entries(q.choices).map(([key, choice]) => {
                 const choiceMedia = choice.media && choice.media.length > 0 ? 
-                    choice.media.map((fileName, i) => 
+                    `<div class="space-y-2 mt-2">${choice.media.map(fileName => 
                         createMediaPreview(fileName, idx, 'choice', 'choice', key)
-                    ).join('') : '';
+                    ).join('')}</div>` : '';
 
                 return `
-                    <div class="choice-item">
-                        <div class="choice-header">
-                            <div class="choice-label">${key}</div>
+                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                        <div class="flex items-center gap-3 mb-2">
+                            <div class="w-8 h-8 bg-indigo-600 text-white rounded-full flex items-center justify-center font-bold">${key}</div>
                             <input type="radio" name="correct_${idx}" value="${key}" 
                                 ${q.correct === key ? 'checked' : ''} 
-                                onchange="setCorrect(${idx}, '${key}')">
-                            <label style="flex: 1;">
-                                <input type="text" value="${choice.text}" 
-                                    onchange="updateChoiceText(${idx}, '${key}', this.value)" 
-                                    placeholder="Nội dung đáp án ${key}" style="width: 100%;">
-                            </label>
+                                onchange="setCorrect(${idx}, '${key}')"
+                                class="w-5 h-5 text-indigo-600">
+                            <input type="text" value="${choice.text}" 
+                                onchange="updateChoiceText(${idx}, '${key}', this.value)" 
+                                placeholder="Nội dung đáp án ${key}" 
+                                class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none">
                         </div>
-                        <div class="media-upload">
-                            <label class="file-input-label">
-                                + Thêm media
-                                <input type="file" multiple onchange="addChoiceMedia(${idx}, '${key}', event)">
-                            </label>
-                            ${choiceMedia ? `<div class="media-preview-container">${choiceMedia}</div>` : ''}
-                        </div>
+                        <label class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 text-sm">
+                            + Thêm media
+                            <input type="file" multiple onchange="addChoiceMedia(${idx}, '${key}', event)" class="hidden">
+                        </label>
+                        ${choiceMedia}
                     </div>
                 `;
             }).join('');
 
             return `
-                <div class="question-item">
-                    <div class="question-header">
-                        <span class="question-number">Câu ${idx + 1}: Trắc nghiệm</span>
-                        <div class="question-actions">
-                            <button class="btn btn-small btn-danger" onclick="deleteQuestion(${idx})">Xóa</button>
+                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-indigo-200 rounded-xl p-5">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-lg font-bold text-indigo-700">Câu ${idx + 1}: Trắc nghiệm</span>
+                        <button onclick="deleteQuestion(${idx})" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg transition">
+                            Xóa
+                        </button>
+                    </div>
+                    <div class="mb-3">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Câu hỏi</label>
+                        <textarea onchange="updateQuestionText(${idx}, this.value)" class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none min-h-[80px]">${q.question.text}</textarea>
+                    </div>
+                    <label class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 text-sm font-medium">
+                        + Thêm media cho câu hỏi
+                        <input type="file" multiple onchange="addQuestionMedia(${idx}, event)" class="hidden">
+                    </label>
+                    ${mediaList}
+                    <div class="mt-4">
+                        <label class="block text-sm font-semibold text-gray-700 mb-3">Đáp án (chọn đáp án đúng)</label>
+                        <div class="space-y-3">
+                            ${choices}
                         </div>
-                    </div>
-                    <div class="form-group">
-                        <label>Câu hỏi</label>
-                        <textarea onchange="updateQuestionText(${idx}, this.value)">${q.question.text}</textarea>
-                    </div>
-                    <div class="media-upload" style="margin: 10px 0;">
-                        <label class="file-input-label">
-                            + Thêm media cho câu hỏi
-                            <input type="file" multiple onchange="addQuestionMedia(${idx}, event)">
-                        </label>
-                        ${mediaList ? `<div class="media-preview-container">${mediaList}</div>` : ''}
-                    </div>
-                    <div style="margin-top: 15px;">
-                        <label>Đáp án (chọn đáp án đúng)</label>
-                        ${choices}
                     </div>
                 </div>
             `;
@@ -885,72 +507,71 @@
 
         function renderTFQuestion(q, idx) {
             const mediaList = q.question.media && q.question.media.length > 0 ? 
-                q.question.media.map((fileName, i) => 
+                `<div class="space-y-2 mt-3">${q.question.media.map(fileName => 
                     createMediaPreview(fileName, idx, 'question', 'question')
-                ).join('') : '';
+                ).join('')}</div>` : '';
 
             const items = Object.entries(q.items).map(([key, item]) => {
                 const itemMedia = item.media && item.media.length > 0 ? 
-                    item.media.map((fileName, i) => 
+                    `<div class="space-y-2 mt-2">${item.media.map(fileName => 
                         createMediaPreview(fileName, idx, 'tfitem', 'tfitem', key)
-                    ).join('') : '';
+                    ).join('')}</div>` : '';
 
                 return `
-                    <div class="tf-item">
-                        <div class="tf-header">
-                            <strong>${key}.</strong>
+                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                        <div class="flex items-center gap-3 mb-2">
+                            <strong class="text-indigo-700">${key}.</strong>
                             <input type="text" value="${item.text}" 
                                 onchange="updateTFItemText(${idx}, '${key}', this.value)" 
-                                placeholder="Mệnh đề ${key}" style="flex: 1;">
-                            <select onchange="updateTFItemCorrect(${idx}, '${key}', this.value)">
+                                placeholder="Mệnh đề ${key}" 
+                                class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none">
+                            <select onchange="updateTFItemCorrect(${idx}, '${key}', this.value)" class="px-3 py-2 border border-gray-300 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none">
                                 <option value="true" ${item.correct ? 'selected' : ''}>Đúng</option>
                                 <option value="false" ${!item.correct ? 'selected' : ''}>Sai</option>
                             </select>
                         </div>
-                        <div class="media-upload">
-                            <label class="file-input-label">
-                                + Thêm media
-                                <input type="file" multiple onchange="addTFItemMedia(${idx}, '${key}', event)">
-                            </label>
-                            ${itemMedia ? `<div class="media-preview-container">${itemMedia}</div>` : ''}
-                        </div>
+                        <label class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 text-sm">
+                            + Thêm media
+                            <input type="file" multiple onchange="addTFItemMedia(${idx}, '${key}', event)" class="hidden">
+                        </label>
+                        ${itemMedia}
                     </div>
                 `;
             }).join('');
 
             return `
-                <div class="question-item">
-                    <div class="question-header">
-                        <span class="question-number">Câu ${idx + 1}: Đúng/Sai</span>
-                        <div class="question-actions">
-                            <button class="btn btn-small btn-danger" onclick="deleteQuestion(${idx})">Xóa</button>
+                <div class="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-emerald-200 rounded-xl p-5">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-lg font-bold text-emerald-700">Câu ${idx + 1}: Đúng/Sai</span>
+                        <button onclick="deleteQuestion(${idx})" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg transition">
+                            Xóa
+                        </button>
+                    </div>
+                    <div class="mb-3">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Đề bài chung</label>
+                        <textarea onchange="updateQuestionText(${idx}, this.value)" class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none min-h-[80px]">${q.question.text}</textarea>
+                    </div>
+                    <label class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 text-sm font-medium">
+                        + Thêm media cho đề bài
+                        <input type="file" multiple onchange="addQuestionMedia(${idx}, event)" class="hidden">
+                    </label>
+                    ${mediaList}
+                    <div class="mt-4">
+                        <label class="block text-sm font-semibold text-gray-700 mb-3">Các mệnh đề</label>
+                        <div class="space-y-3">
+                            ${items}
                         </div>
-                    </div>
-                    <div class="form-group">
-                        <label>Đề bài chung</label>
-                        <textarea onchange="updateQuestionText(${idx}, this.value)">${q.question.text}</textarea>
-                    </div>
-                    <div class="media-upload" style="margin: 10px 0;">
-                        <label class="file-input-label">
-                            + Thêm media cho đề bài
-                            <input type="file" multiple onchange="addQuestionMedia(${idx}, event)">
-                        </label>
-                        ${mediaList ? `<div class="media-preview-container">${mediaList}</div>` : ''}
-                    </div>
-                    <div style="margin-top: 15px;">
-                        <label>Các mệnh đề</label>
-                        ${items}
                     </div>
                 </div>
             `;
         }
 
         function openAddQuestionModal() {
-            document.getElementById('addQuestionModal').classList.add('active');
+            document.getElementById('addQuestionModal').classList.remove('hidden');
         }
 
         function closeAddQuestionModal() {
-            document.getElementById('addQuestionModal').classList.remove('active');
+            document.getElementById('addQuestionModal').classList.add('hidden');
         }
 
         function addQuestion(type) {
@@ -984,8 +605,6 @@
 
         function deleteQuestion(idx) {
             if (confirm('Xóa câu hỏi này?')) {
-                stopAllMedia();
-                
                 const question = questions[idx];
                 
                 if (question.question.media) {
@@ -1163,8 +782,6 @@
 
         async function exportZip() {
             try {
-                stopAllMedia();
-                
                 const zip = new JSZip();
 
                 const config = {
@@ -1214,96 +831,7 @@
             if (!file) return;
 
             try {
-                stopAllMedia();
-                
-                const zip = await JSZip.loadAsync(file);
-
-                if (!zip.file('config.yaml')) {
-                    throw new Error('Không tìm thấy file config.yaml');
-                }
-                
-                const configText = await zip.file('config.yaml').async('text');
-                const config = jsyaml.load(configText);
-
-                document.getElementById('title').value = config.metadata.title || '';
-                document.getElementById('subject').value = config.metadata.subject || '';
-                document.getElementById('grade').value = config.metadata.grade || '';
-                document.getElementById('author').value = config.metadata.author || '';
-                document.getElementById('description').value = config.exam.description || '';
-                document.getElementById('duration').value = config.exam.duration_minutes || 45;
-                if (config.exam.start_time) {
-                    document.getElementById('startTime').value = config.exam.start_time.replace(' ', 'T');
-                }
-                if (config.exam.end_time) {
-                    document.getElementById('endTime').value = config.exam.end_time.replace(' ', 'T');
-                }
-                document.getElementById('shuffleQuestions').checked = config.exam.shuffle_questions || false;
-                document.getElementById('shuffleAnswers').checked = config.exam.shuffle_answers || false;
-
-                if (!zip.file('questions.yaml')) {
-                    throw new Error('Không tìm thấy file questions.yaml');
-                }
-                
-                const questionsText = await zip.file('questions.yaml').async('text');
-                const questionsData = jsyaml.load(questionsText);
-
-                questions = [];
-                mediaFiles = {};
-
-                if (questionsData.questions) {
-                    questions = questionsData.questions.map(q => {
-                        const normalized = { ...q };
-                        
-                        if (normalized.question.media) {
-                            normalized.question.media = Array.isArray(normalized.question.media) 
-                                ? normalized.question.media 
-                                : [normalized.question.media];
-                        } else {
-                            normalized.question.media = [];
-                        }
-
-                        if (q.type === 'multiple_choice') {
-                            Object.keys(normalized.choices).forEach(key => {
-                                if (normalized.choices[key].media) {
-                                    normalized.choices[key].media = Array.isArray(normalized.choices[key].media)
-                                        ? normalized.choices[key].media
-                                        : [normalized.choices[key].media];
-                                } else {
-                                    normalized.choices[key].media = [];
-                                }
-                            });
-                        } else {
-                            Object.keys(normalized.items).forEach(key => {
-                                if (normalized.items[key].media) {
-                                    normalized.items[key].media = Array.isArray(normalized.items[key].media)
-                                        ? normalized.items[key].media
-                                        : [normalized.items[key].media];
-                                } else {
-                                    normalized.items[key].media = [];
-                                }
-                            });
-                        }
-
-                        return normalized;
-                    });
-                }
-
-                const mediaFolder = zip.folder('media');
-                if (mediaFolder) {
-                    const mediaPromises = [];
-                    mediaFolder.forEach((relativePath, zipEntry) => {
-                        if (!zipEntry.dir) {
-                            mediaPromises.push(
-                                zipEntry.async('blob').then(blob => {
-                                    const file = new File([blob], relativePath);
-                                    mediaFiles[relativePath] = file;
-                                })
-                            );
-                        }
-                    });
-                    await Promise.all(mediaPromises);
-                }
-
+                await loadZipFromBlob(file);
                 renderQuestions();
                 alert('Tải lên thành công!');
             } catch (error) {
@@ -1313,10 +841,35 @@
             }
         }
 
+        async function clearAll() {
+            if (confirm('Bạn có chắc muốn xóa tất cả dữ liệu? Hành động này không thể hoàn tác!')) {
+                questions = [];
+                mediaFiles = {};
+                
+                document.getElementById('title').value = '';
+                document.getElementById('subject').value = '';
+                document.getElementById('grade').value = '';
+                document.getElementById('author').value = '';
+                document.getElementById('description').value = '';
+                document.getElementById('duration').value = 45;
+                
+                const now = new Date();
+                const nextYear = new Date(now.getFullYear() + 1, 11, 31, 23, 59);
+                document.getElementById('startTime').value = now.toISOString().slice(0, 16);
+                document.getElementById('endTime').value = nextYear.toISOString().slice(0, 16);
+                
+                document.getElementById('shuffleQuestions').checked = false;
+                document.getElementById('shuffleAnswers').checked = false;
+                
+                await clearIndexedDB();
+                
+                renderQuestions();
+                alert('Đã xóa tất cả dữ liệu!');
+            }
+        }
+
         function openPublishModal() {
-            stopAllMedia();
-            
-            document.getElementById('publishModal').classList.add('active');
+            document.getElementById('publishModal').classList.remove('hidden');
             document.getElementById('publishResult').innerHTML = '';
             document.getElementById('uploadStatus').classList.add('hidden');
             turnstileToken = null;
@@ -1325,7 +878,7 @@
             const publishBtn = document.getElementById('publishBtn');
             publishBtn.disabled = true;
             publishBtn.textContent = 'Xuất bản';
-            publishBtn.className = 'btn btn-success';
+            publishBtn.className = 'flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed';
             publishBtn.onclick = publishQuiz;
             
             if (window.turnstile) {
@@ -1334,7 +887,7 @@
         }
 
         function closePublishModal() {
-            document.getElementById('publishModal').classList.remove('active');
+            document.getElementById('publishModal').classList.add('hidden');
         }
 
         window.onTurnstileSuccess = function(token) {
@@ -1354,7 +907,7 @@
             const uploadStatus = document.getElementById('uploadStatus');
 
             publishBtn.disabled = true;
-            loading.style.display = 'block';
+            loading.classList.remove('hidden');
             resultBox.innerHTML = '';
             uploadStatus.classList.remove('hidden');
 
@@ -1414,50 +967,52 @@
                     publishedLink = `${currentDomain}/quizly?r=${encodeURIComponent(result.publicUrl)}`;
                     
                     resultBox.innerHTML = `
-                        <div class="result-box">
-                            <h3>✅ Xuất bản thành công!</h3>
-                            <p><strong>File ID:</strong> ${result.fileId}</p>
-                            <p><strong>Tên file:</strong> ${result.fileName}</p>
-                            <p><strong>Link làm bài:</strong></p>
-                            <div class="link-container">
-                                <input type="text" id="quizLinkInput" value="${publishedLink}" readonly>
-                                <button class="btn btn-copy" onclick="copyLinkToClipboard()">📋 Copy</button>
+                        <div class="bg-green-50 border-2 border-green-500 rounded-xl p-5">
+                            <h3 class="text-xl font-bold text-green-800 mb-3">✅ Xuất bản thành công!</h3>
+                            <p class="text-sm text-gray-700 mb-2"><strong>File ID:</strong> ${result.fileId}</p>
+                            <p class="text-sm text-gray-700 mb-3"><strong>Tên file:</strong> ${result.fileName}</p>
+                            <p class="text-sm font-semibold text-gray-700 mb-2">Link làm bài:</p>
+                            <div class="flex gap-2">
+                                <input type="text" id="quizLinkInput" value="${publishedLink}" readonly class="flex-1 px-3 py-2 border-2 border-gray-300 rounded-lg font-mono text-sm">
+                                <button onclick="copyLinkToClipboard()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition whitespace-nowrap">
+                                    📋 Copy
+                                </button>
                             </div>
-                            <p style="margin-top: 10px; font-size: 12px; color: #718096;">
-                                <a href="${publishedLink}" target="_blank">Mở link trong tab mới</a>
+                            <p class="mt-3 text-sm text-gray-600">
+                                <a href="${publishedLink}" target="_blank" class="text-indigo-600 hover:underline">Mở link trong tab mới</a>
                             </p>
                         </div>
                     `;
                     
                     publishBtn.textContent = '📋 Copy link';
-                    publishBtn.className = 'btn btn-copy';
+                    publishBtn.className = 'flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition';
                     publishBtn.onclick = copyLinkToClipboard;
                     publishBtn.disabled = false;
                 } else {
                     resultBox.innerHTML = `
-                        <div style="background: #fff5f5; border: 2px solid #fc8181; border-radius: 8px; padding: 15px; color: #c53030;">
-                            <strong>❌ Lỗi:</strong> ${result.error}
+                        <div class="bg-red-50 border-2 border-red-500 rounded-xl p-5">
+                            <strong class="text-red-800">❌ Lỗi:</strong> <span class="text-red-700">${result.error}</span>
                         </div>
                     `;
                     
                     publishBtn.textContent = 'Xuất bản';
-                    publishBtn.className = 'btn btn-success';
+                    publishBtn.className = 'flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed';
                     publishBtn.onclick = publishQuiz;
                     publishBtn.disabled = false;
                 }
             } catch (error) {
                 resultBox.innerHTML = `
-                    <div style="background: #fff5f5; border: 2px solid #fc8181; border-radius: 8px; padding: 15px; color: #c53030;">
-                        <strong>❌ Lỗi:</strong> ${error.message}
+                    <div class="bg-red-50 border-2 border-red-500 rounded-xl p-5">
+                        <strong class="text-red-800">❌ Lỗi:</strong> <span class="text-red-700">${error.message}</span>
                     </div>
                 `;
                 
                 publishBtn.textContent = 'Xuất bản';
-                publishBtn.className = 'btn btn-success';
+                publishBtn.className = 'flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed';
                 publishBtn.onclick = publishQuiz;
                 publishBtn.disabled = false;
             } finally {
-                loading.style.display = 'none';
+                loading.classList.add('hidden');
                 uploadStatus.classList.add('hidden');
             }
         }
@@ -1497,8 +1052,8 @@
             }
         }
 
-        // Initialize
-        renderQuestions();
+        // Initialize on page load
+        init();
     </script>
 </body>
 </html>

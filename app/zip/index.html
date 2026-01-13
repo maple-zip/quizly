@@ -1534,16 +1534,24 @@
                     }
                 } else if (q.type === 'true_false_group') {
                     const userAnswer = userAnswers[index] || {};
-                    let allCorrect = true;
                     
-                    q.shuffledItems.forEach((item, i) => {
-                        if (userAnswer[i] !== item.correct) {
-                            allCorrect = false;
+                    // Check if all items are answered
+                    const allAnswered = q.shuffledItems.every((item, i) => 
+                        userAnswer[i] !== undefined
+                    );
+                    
+                    if (allAnswered) {
+                        // Only check correctness if all items are answered
+                        let allCorrect = true;
+                        q.shuffledItems.forEach((item, i) => {
+                            if (userAnswer[i] !== item.correct) {
+                                allCorrect = false;
+                            }
+                        });
+                        
+                        if (allCorrect) {
+                            correctCount++;
                         }
-                    });
-                    
-                    if (allCorrect) {
-                        correctCount++;
                     }
                 }
             });
@@ -1635,13 +1643,21 @@
         // Display true/false result
         function displayTrueFalseResult(q, index) {
             const userAnswer = userAnswers[index] || {};
-            let allCorrect = true;
             
-            q.shuffledItems.forEach((item, i) => {
-                if (userAnswer[i] !== item.correct) {
-                    allCorrect = false;
-                }
-            });
+            // Check if all items are answered
+            const allAnswered = q.shuffledItems.every((item, i) => 
+                userAnswer[i] !== undefined
+            );
+            
+            let allCorrect = false;
+            if (allAnswered) {
+                allCorrect = true;
+                q.shuffledItems.forEach((item, i) => {
+                    if (userAnswer[i] !== item.correct) {
+                        allCorrect = false;
+                    }
+                });
+            }
 
             let html = `<div class="result-status ${allCorrect ? 'correct' : 'incorrect'}">`;
             html += allCorrect ? '✓ Đúng' : '✗ Sai';

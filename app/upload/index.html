@@ -259,6 +259,12 @@ async function parseHTMLString(htmlText) {
 
       const mediaNames = [];
       for (const n of blockNodes) {
+        // Xử lý node tự nó là <img>
+        if (n.nodeType === 1 && n.tagName === 'IMG') {
+          const name = n.getAttribute('data-indexeddb-name');
+          if (name) mediaNames.push(name);
+        }
+        // Xử lý <img> bên trong node
         if (n.querySelectorAll) {
           for (const im of Array.from(n.querySelectorAll('img'))) {
             const nm = im.getAttribute('data-indexeddb-name');
@@ -358,8 +364,11 @@ exam:
   const questionsYaml = toYAML(data);
   zip.file('questions.yaml', questionsYaml);
 
-  // Tạo thư mục media rỗng - không thêm bất kỳ file nào
-  zip.folder('media');
+  // Thêm các file media vào thư mục media
+  const mediaFolder = zip.folder('media');
+  for (const [name, blob] of data.mediaFiles.entries()) {
+    mediaFolder.file(name, blob);
+  }
 
   return zip;
 }

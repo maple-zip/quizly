@@ -16,6 +16,16 @@
     <p class="text-gray-600 mb-6">Tải lên file DOCX để chuyển đổi thành bài quiz và chỉnh sửa</p>
     
     <div class="space-y-4">
+      <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mb-4">
+        <label class="flex items-start cursor-pointer">
+          <input type="checkbox" id="autoDistributeImages" checked class="mt-1 w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500">
+          <div class="ml-3">
+            <span class="text-sm font-semibold text-emerald-900">Tự động phân bố ảnh</span>
+            <p class="text-xs text-emerald-700 mt-1">Nếu câu hỏi trắc nghiệm có đúng 4 ảnh, tự động gán mỗi ảnh cho A, B, C, D (bỏ qua vị trí ban đầu)</p>
+          </div>
+        </label>
+      </div>
+      
       <div class="border-2 border-dashed border-emerald-300 rounded-xl p-8 text-center hover:border-emerald-500 transition">
         <input type="file" id="docxInput" accept=".docx" class="hidden" onchange="handleFileUpload(this)">
         <label for="docxInput" class="cursor-pointer">
@@ -97,7 +107,8 @@ async function handleFileUpload(input) {
     const html = result.value;
 
     showStatus('Đang phân tích câu hỏi...');
-    const parsedData = await parseHTMLString(html);
+    const autoDistribute = document.getElementById('autoDistributeImages').checked;
+    const parsedData = await parseHTMLString(html, autoDistribute);
 
     showStatus('Đang tạo file ZIP...');
     const zip = await createQuizZip(parsedData);
@@ -202,7 +213,7 @@ function toYAML(obj) {
   return lines.join('\n');
 }
 
-async function parseHTMLString(htmlText) {
+async function parseHTMLString(htmlText, autoDistributeImages = true) {
   const doc = new DOMParser().parseFromString(htmlText, 'text/html');
 
   const imgEls = Array.from(doc.querySelectorAll('img'));
@@ -257,20 +268,22 @@ async function parseHTMLString(htmlText) {
       
       const blockText = blockNodes.map(n => n.textContent).join('\n').trim();
 
-      const mediaNames = [];
-      for (const n of blockNodes) {
-        // Xử lý node tự nó là <img>
+      // Helper: lấy ảnh từ một node
+      function getMediaFromNode(n) {
+        const names = [];
+        // Node tự nó là <img>
         if (n.nodeType === 1 && n.tagName === 'IMG') {
           const name = n.getAttribute('data-indexeddb-name');
-          if (name) mediaNames.push(name);
+          if (name) names.push(name);
         }
-        // Xử lý <img> bên trong node
+        // <img> bên trong node
         if (n.querySelectorAll) {
           for (const im of Array.from(n.querySelectorAll('img'))) {
             const nm = im.getAttribute('data-indexeddb-name');
-            if (nm) mediaNames.push(nm);
+            if (nm) names.push(nm);
           }
         }
+        return names;
       }
 
       let norm = blockText.replace(/\r/g, '').replace(/\t/g, ' ');
@@ -280,6 +293,23 @@ async function parseHTMLString(htmlText) {
       const choiceLines = lines.filter(l => /^[A-D]\./.test(l));
 
       if (choiceLines.length >= 2 && mode === 'mc') {
+        // Tìm node chứa lựa chọn A. đầu tiên
+        let firstChoiceNodeIndex = -1;
+        for (let idx = 0; idx < blockNodes.length; idx++) {
+          const txt = (blockNodes[idx].textContent || '').trim();
+          if (/A\./i.test(txt)) {
+            firstChoiceNodeIndex = idx;
+            break;
+          }
+        }
+
+        // Ảnh của câu hỏi: chỉ lấy từ các node TRƯỚC lựa chọn A.
+        const questionMediaNames = [];
+        const endIdx = firstChoiceNodeIndex >= 0 ? firstChoiceNodeIndex : blockNodes.length;
+        for (let idx = 0; idx < endIdx; idx++) {
+          questionMediaNames.push(...getMediaFromNode(blockNodes[idx]));
+        }
+
         let qtextLines = [];
         for (const l of lines) {
           if (/^[A-D]\./.test(l)) break;
@@ -287,6 +317,7 @@ async function parseHTMLString(htmlText) {
         }
         const qtext = qtextLines.join(' ').replace(/^(câu\s*\d+[:.]?)/i, '').trim();
         
+        // Xây dựng choices với text
         const choices = {};
         const map = {};
         for (const l of choiceLines) {
@@ -296,17 +327,102 @@ async function parseHTMLString(htmlText) {
         ['A', 'B', 'C', 'D'].forEach(k => {
           choices[k] = { text: map[k] || '' };
         });
+
+        // Gán ảnh cho từng lựa chọn
+        if (firstChoiceNodeIndex >= 0) {
+          let currentChoice = null;
+          for (let idx = firstChoiceNodeIndex; idx < blockNodes.length; idx++) {
+            const n = blockNodes[idx];
+            const txt = (n.textContent || '').trim();
+            const choiceMatch = txt.match(/^([A-D])\./);
+            
+            if (choiceMatch) {
+              currentChoice = choiceMatch[1];
+            } else if (currentChoice) {
+              // Node này không phải lựa chọn mới → ảnh thuộc lựa chọn hiện tại
+              const media = getMediaFromNode(n);
+              if (media.length > 0) {
+                if (!choices[currentChoice].media) choices[currentChoice].media = [];
+                if (!Array.isArray(choices[currentChoice].media)) {
+                  choices[currentChoice].media = [choices[currentChoice].media];
+                }
+                choices[currentChoice].media.push(...media);
+              }
+            }
+          }
+        }
+
+        // Chuẩn hóa media của choices (đơn giản hóa nếu chỉ 1 ảnh)
+        for (const k of ['A', 'B', 'C', 'D']) {
+          if (choices[k].media && Array.isArray(choices[k].media)) {
+            if (choices[k].media.length === 1) {
+              choices[k].media = choices[k].media[0];
+            } else if (choices[k].media.length === 0) {
+              delete choices[k].media;
+            }
+          }
+        }
+
+        // TỰ ĐỘNG PHÂN BỐ ẢNH: nếu có đúng 4 ảnh trong câu hỏi
+        if (autoDistributeImages) {
+          // Gom tất cả ảnh từ question và choices
+          const allMedia = [];
+          
+          // Ảnh từ question
+          if (questionMediaNames.length > 0) {
+            allMedia.push(...questionMediaNames);
+          }
+          
+          // Ảnh từ choices
+          for (const k of ['A', 'B', 'C', 'D']) {
+            if (choices[k].media) {
+              if (Array.isArray(choices[k].media)) {
+                allMedia.push(...choices[k].media);
+              } else {
+                allMedia.push(choices[k].media);
+              }
+            }
+          }
+
+          // Nếu có đúng 4 ảnh → phân bố lại
+          if (allMedia.length === 4) {
+            // Xóa media khỏi question
+            questionMediaNames.length = 0;
+            
+            // Gán mỗi ảnh cho A, B, C, D
+            choices.A.media = allMedia[0];
+            choices.B.media = allMedia[1];
+            choices.C.media = allMedia[2];
+            choices.D.media = allMedia[3];
+          }
+        }
         
         questions.push({
           type: 'multiple_choice',
           question: {
             text: qtext,
-            media: mediaNames.length ? (mediaNames.length === 1 ? mediaNames[0] : mediaNames) : undefined
+            media: questionMediaNames.length ? (questionMediaNames.length === 1 ? questionMediaNames[0] : questionMediaNames) : undefined
           },
           choices,
           correct: ''
         });
       } else if (mode === 'tf') {
+        // Helper đã định nghĩa ở trên, dùng lại
+        const getMediaFromNode = (n) => {
+          const names = [];
+          if (n.nodeType === 1 && n.tagName === 'IMG') {
+            const name = n.getAttribute('data-indexeddb-name');
+            if (name) names.push(name);
+          }
+          if (n.querySelectorAll) {
+            for (const im of Array.from(n.querySelectorAll('img'))) {
+              const nm = im.getAttribute('data-indexeddb-name');
+              if (nm) names.push(nm);
+            }
+          }
+          return names;
+        };
+
         let combined = blockText.replace(/\r/g, '').replace(/\t/g, ' ');
         combined = combined.replace(/\s*a\)|\s*a\./gi, '\na.').replace(/\s*b\)|\s*b\./gi, '\nb.').replace(/\s*c\)|\s*c\./gi, '\nc.').replace(/\s*d\)|\s*d\./gi, '\nd.');
         const itLines = combined.split('\n').map(s => s.trim()).filter(Boolean);
@@ -315,11 +431,63 @@ async function parseHTMLString(htmlText) {
         if (!/^a\./i.test(itLines[0])) {
           header = itLines.shift();
         }
+
+        // Tìm node chứa item a. đầu tiên
+        let firstItemNodeIndex = -1;
+        for (let idx = 0; idx < blockNodes.length; idx++) {
+          const txt = (blockNodes[idx].textContent || '').trim();
+          if (/a\./i.test(txt)) {
+            firstItemNodeIndex = idx;
+            break;
+          }
+        }
+
+        // Ảnh của câu hỏi: chỉ lấy từ các node TRƯỚC item a.
+        const questionMediaNames = [];
+        const endIdx = firstItemNodeIndex >= 0 ? firstItemNodeIndex : blockNodes.length;
+        for (let idx = 0; idx < endIdx; idx++) {
+          questionMediaNames.push(...getMediaFromNode(blockNodes[idx]));
+        }
         
         const items = {};
         for (const line of itLines) {
           const m = line.match(/^([a-d])\.\s*(.*)/i);
           if (m) items[m[1]] = { text: m[2].trim() };
+        }
+
+        // Gán ảnh cho từng item
+        if (firstItemNodeIndex >= 0) {
+          let currentItem = null;
+          for (let idx = firstItemNodeIndex; idx < blockNodes.length; idx++) {
+            const n = blockNodes[idx];
+            const txt = (n.textContent || '').trim();
+            const itemMatch = txt.match(/^([a-d])\./i);
+            
+            if (itemMatch) {
+              currentItem = itemMatch[1].toLowerCase();
+            } else if (currentItem) {
+              // Node này không phải item mới → ảnh thuộc item hiện tại
+              const media = getMediaFromNode(n);
+              if (media.length > 0) {
+                if (!items[currentItem].media) items[currentItem].media = [];
+                if (!Array.isArray(items[currentItem].media)) {
+                  items[currentItem].media = [items[currentItem].media];
+                }
+                items[currentItem].media.push(...media);
+              }
+            }
+          }
+        }
+
+        // Chuẩn hóa media của items
+        for (const k of ['a', 'b', 'c', 'd']) {
+          if (items[k] && items[k].media && Array.isArray(items[k].media)) {
+            if (items[k].media.length === 1) {
+              items[k].media = items[k].media[0];
+            } else if (items[k].media.length === 0) {
+              delete items[k].media;
+            }
+          }
         }
         
         if (Object.keys(items).length > 0) {
@@ -327,7 +495,7 @@ async function parseHTMLString(htmlText) {
             type: 'true_false_group',
             question: {
               text: header || '',
-              media: mediaNames.length ? mediaNames : undefined
+              media: questionMediaNames.length ? (questionMediaNames.length === 1 ? questionMediaNames[0] : questionMediaNames) : undefined
             },
             items
           });

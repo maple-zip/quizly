@@ -27,7 +27,7 @@
     <!-- Header -->
     <div class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg">
         <div class="max-w-7xl mx-auto px-6 py-6">
-            <h1 class="text-3xl font-bold mb-1">📝 Quizly Editor</h1>
+            <h1 class="text-3xl font-bold mb-1">Quizly Editor</h1>
             <p class="text-indigo-100">Soạn bài kiểm tra trực tuyến - Hỗ trợ trắc nghiệm và Đúng/Sai</p>
         </div>
     </div>
@@ -36,17 +36,17 @@
         <!-- Actions -->
         <div class="flex flex-wrap gap-3 mb-8">
             <button onclick="exportZip()" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-md transition transform hover:scale-105 flex items-center gap-2">
-                💾 Tải xuống ZIP
+                Tải xuống ZIP
             </button>
             <button onclick="openPublishModal()" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg shadow-md transition transform hover:scale-105 flex items-center gap-2">
-                🚀 Xuất bản
+                Xuất bản
             </button>
             <label class="px-6 py-3 bg-slate-600 hover:bg-slate-700 text-white font-semibold rounded-lg shadow-md transition cursor-pointer flex items-center gap-2">
-                📁 Tải lên ZIP
+                Tải lên ZIP
                 <input type="file" accept=".zip" onchange="importZip(event)" class="hidden">
             </label>
             <button onclick="clearAll()" class="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg shadow-md transition transform hover:scale-105 flex items-center gap-2">
-                🗑️ Xóa tất cả
+                Xóa tất cả
             </button>
         </div>
 
@@ -108,7 +108,7 @@
         <!-- Questions Section -->
         <div class="bg-white rounded-xl shadow-md p-6">
             <h2 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-                ❓ Câu hỏi
+                Câu hỏi
             </h2>
             <div id="questionsList" class="space-y-4 mb-4"></div>
             <button onclick="openAddQuestionModal()" class="w-full py-4 border-2 border-dashed border-gray-300 rounded-xl text-gray-600 font-semibold hover:border-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 transition">
@@ -123,10 +123,10 @@
             <h3 class="text-2xl font-bold text-gray-800 mb-6">Chọn loại câu hỏi</h3>
             <div class="space-y-3">
                 <button onclick="addQuestion('multiple_choice')" class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition">
-                    📝 Trắc nghiệm (ABCD)
+                    Trắc nghiệm (ABCD)
                 </button>
                 <button onclick="addQuestion('true_false_group')" class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition">
-                    ✅ Đúng/Sai
+                    Đúng/Sai
                 </button>
                 <button onclick="closeAddQuestionModal()" class="w-full py-4 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg transition">
                     Hủy
@@ -140,6 +140,7 @@
         <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <h3 class="text-2xl font-bold text-gray-800 mb-4">🚀 Xuất bản lên Quizly</h3>
             <p class="text-gray-600 mb-6">Hệ thống sẽ tạo file ZIP và tải lên server, sau đó trả về link làm bài.</p>
+            <p class="text-gray-600 mb-6">Lưu ý: Do giới hạn máy chủ, mỗi đề ôn tập chỉ được lưu trong 7 ngày.</p>
             
             <div id="uploadStatus" class="hidden text-center text-gray-600 mb-4">
                 Đang xử lý upload...

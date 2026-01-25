@@ -2,8 +2,8 @@ name: Cleanup Old ZIP Files
 
 on:
   schedule:
-    # Chạy mỗi 5 ngày vào lúc 00:00 UTC
-    - cron: '0 0 */5 * *'
+    # Chạy mỗi 3 ngày vào lúc 00:00 UTC
+    - cron: '0 0 */3 * *'
   
   # Cho phép chạy thủ công từ GitHub UI
   workflow_dispatch:

@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quizly - Ôn tập nhanh, đơn giản và nhẹ nhàng</title>
+    <title>Quizly - Ôn tập nhanh, Đơn giản và nhẹ nhàng</title>
     <meta name="description" content="Nền tảng luyện tập kiến thức nhanh, đơn giản cho học sinh">
     
     <!-- Open Graph / Social Media -->
     <meta property="og:type" content="website">
-    <meta property="og:title" content="Quizly - Ôn tập nhanh, đơn giản và nhẹ nhàng">
+    <meta property="og:title" content="Quizly - Ôn tập nhanh, Đơn giản và nhẹ nhàng">
     <meta property="og:description" content="Nền tảng luyện tập kiến thức nhanh, đơn giản cho học sinh">
     <meta property="og:image" content="https://raw.githubusercontent.com/maple-zip/quizly/refs/heads/main/quizly-og.png">
     
@@ -44,6 +44,18 @@
             scroll-behavior: smooth;
         }
     </style>
+    
+    <!-- Auto-redirect script - PHẢI ĐẶT TRƯỚC KHI RENDER TRANG -->
+    <script>
+        (function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const rParam = urlParams.get('r');
+            if (rParam) {
+                const newUrl = `/quizly/app/zip?zip=${encodeURIComponent(rParam)}`;
+                window.location.href = newUrl;
+            }
+        })();
+    </script>
 </head>
 <body class="bg-gray-50 text-gray-900">
 
@@ -69,7 +81,7 @@
                 Ôn tập nhanh - Đơn giản và nhẹ nhàng
             </h1>
             <p class="text-base sm:text-xl text-gray-600 mb-6 sm:mb-8 leading-relaxed max-w-2xl mx-auto">
-                Nền tảng nhỏ tạo và làm bài ôn tập trực tuyến miễn phí, mã nguồn mở dựa trên Supabase
+                Nền tảng nhẹ tạo và làm bài ôn tập trực tuyến miễn phí, mã nguồn mở dựa trên Supabase
             </p>
             <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-6 sm:mb-8">
                 <a href="https://maple-zip.github.io/quizly/app/" class="bg-primary-600 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold hover:bg-primary-700 transition">
@@ -276,7 +288,7 @@
                         <span class="text-lg font-bold text-white">Quizly</span>
                     </div>
                     <p class="text-sm mb-3 sm:mb-4">
-                        Nền tảng nhỏ tạo và làm bài ôn tập trực tuyến miễn phí, mã nguồn mở
+                        Nền tảng nhẹ tạo và làm bài ôn tập trực tuyến miễn phí, mã nguồn mở
                     </p>
                 </div>
 

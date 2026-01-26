@@ -632,17 +632,28 @@
 
             // Update active state
             nav.querySelectorAll('button').forEach((btn, i) => {
-                btn.classList.remove('bg-primary-600', 'text-white', 'ring-2', 'ring-primary-400');
-                if (i === index) {
-                    btn.classList.add('bg-primary-600', 'text-white', 'ring-2', 'ring-primary-400');
-                    btn.classList.remove('bg-primary-50', 'text-primary-700');
-                } else {
-                    btn.classList.add('bg-primary-50', 'text-primary-700');
-                }
+                // Reset all dynamic classes
+                btn.classList.remove('bg-primary-600', 'bg-primary-100', 'text-white', 'ring-2', 'ring-primary-400', 'ring-success-500', 'bg-success-100', 'text-success-600');
                 
-                // Show answered state
-                if (isQuestionAnswered(i)) {
-                    btn.classList.add('ring-2', 'ring-success-500');
+                const answered = isQuestionAnswered(i);
+                
+                if (i === index) {
+                    // Current question being viewed
+                    if (answered) {
+                        // Answered: green background with green text
+                        btn.classList.add('bg-success-100', 'text-success-600', 'ring-2', 'ring-primary-400');
+                    } else {
+                        // Not answered: light blue background, keep dark blue text for visibility
+                        btn.classList.add('bg-primary-100', 'text-primary-700', 'ring-2', 'ring-primary-400');
+                    }
+                    btn.classList.remove('bg-primary-50');
+                } else {
+                    // Not current question
+                    if (answered) {
+                        btn.classList.add('bg-success-100', 'text-success-600');
+                    } else {
+                        btn.classList.add('bg-primary-50', 'text-primary-700');
+                    }
                 }
             });
 

@@ -3,301 +3,212 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quizly - Ôn tập trực tuyến hiện đại</title>
+    <title>Quizly - Ôn tập nhanh, đơn giản và nhẹ nhàng</title>
+    <meta name="description" content="Nền tảng luyện tập kiến thức nhanh, đơn giản cho học sinh">
+    
+    <!-- Open Graph / Social Media -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Quizly - Ôn tập nhanh, đơn giản và nhẹ nhàng">
+    <meta property="og:description" content="Nền tảng luyện tập kiến thức nhanh, đơn giản cho học sinh">
+    <meta property="og:image" content="https://raw.githubusercontent.com/maple-zip/quizly/refs/heads/main/quizly-og.png">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="https://raw.githubusercontent.com/maple-zip/quizly/refs/heads/main/favicon.ico">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        primary: '#28cc9e',
-                        'primary-dark': '#196b69',
-                        accent: '#90f6d7',
-                        secondary: '#35bcbf',
-                        dark: '#41506b',
-                        darker: '#263849'
+                        primary: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            200: '#bfdbfe',
+                            300: '#93c5fd',
+                            400: '#60a5fa',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
+                            950: '#172554'
+                        }
                     }
                 }
             }
         }
     </script>
     <style>
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-20px); }
-        }
-        .float-animation {
-            animation: float 3s ease-in-out infinite;
-        }
-        .gradient-text {
-            background: linear-gradient(135deg, #28cc9e 0%, #196b69 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+        html {
+            scroll-behavior: smooth;
         }
     </style>
-    <!-- Cloudflare Web Analytics -->
-    <script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "f24fa45919f64f7c9dd9300b93416d7f"}'></script>
-    <!-- End Cloudflare Web Analytics -->
 </head>
-<body class="bg-gradient-to-br from-gray-50 to-gray-100">
-    <!-- Auto-redirect script -->
-    <script>
-        (function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const rParam = urlParams.get('r');
-            if (rParam) {
-                const newUrl = `/quizly/app/zip?zip=${encodeURIComponent(rParam)}`;
-                window.location.href = newUrl;
-            }
-        })();
-    </script>
+<body class="bg-gray-50 text-gray-900">
 
     <!-- Header -->
-    <header class="fixed top-0 left-0 right-0 bg-white/90 backdrop-blur-md shadow-sm z-50">
-        <nav class="container mx-auto px-6 py-4 flex items-center justify-between">
-            <div class="flex items-center space-x-2">
-                <svg width="40" height="40" viewBox="0 0 40 40" class="text-primary">
-                    <rect width="40" height="40" rx="8" fill="currentColor"/>
-                    <text x="50%" y="50%" text-anchor="middle" dy=".35em" fill="white" font-size="24" font-weight="700">Q</text>
-                </svg>
-                <span class="text-2xl font-bold gradient-text">Quizly</span>
+    <header class="fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-sm shadow-sm z-50">
+        <nav class="container mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <img src="https://raw.githubusercontent.com/maple-zip/quizly/refs/heads/main/favicon.ico" alt="Quizly" class="w-8 h-8">
+                <span class="text-xl font-bold text-primary-600">Quizly</span>
             </div>
-            <div class="hidden md:flex items-center space-x-8">
-                <a href="#features" class="text-gray-700 hover:text-primary transition">Tính năng</a>
-                <a href="#demo" class="text-gray-700 hover:text-primary transition">Demo</a>
-                <a href="https://github.com/maple-zip/quizly" target="_blank" class="text-gray-700 hover:text-primary transition">GitHub</a>
-                <a href="https://maple-zip.github.io/quizly/app/" class="bg-primary hover:bg-primary-dark text-white px-6 py-2 rounded-lg font-semibold transition transform hover:scale-105">
-                    Dùng ngay
-                </a>
+            <div class="flex items-center gap-4 sm:gap-6">
+                <a href="#features" class="text-sm sm:text-base text-gray-700 hover:text-primary-600 transition">Tính năng</a>
+                <a href="#screenshots" class="text-sm sm:text-base text-gray-700 hover:text-primary-600 transition">Ảnh demo</a>
+                <a href="https://github.com/maple-zip/quizly" target="_blank" class="text-sm sm:text-base text-gray-700 hover:text-primary-600 transition">GitHub</a>
             </div>
-            <button class="md:hidden text-gray-700">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-                </svg>
-            </button>
         </nav>
     </header>
 
     <!-- Hero Section -->
-    <section class="pt-32 pb-20 px-6">
-        <div class="container mx-auto">
-            <div class="grid md:grid-cols-2 gap-12 items-center">
-                <div class="space-y-6">
-                    <h1 class="text-5xl md:text-6xl font-bold text-gray-900 leading-tight">
-                        Ôn tập trực tuyến
-                        <span class="gradient-text block">hiện đại & miễn phí</span>
-                    </h1>
-                    <p class="text-xl text-gray-600 leading-relaxed">
-                        Tạo và chia sẻ bài ôn tập trực tuyến với giao diện đẹp mắt, hỗ trợ đa phương tiện và hoàn toàn mã nguồn mở. <br /> Lưu ý: Do giới hạn máy chủ, mỗi đề ôn tập chỉ được lưu trong khoảng 7 ngày. <br /> Chỉ sử dụng trong ôn tập, không sử dụng khi kiểm tra nghiêm túc.
-                    </p>
-                    <div class="flex flex-col sm:flex-row gap-4">
-                        <a href="https://maple-zip.github.io/quizly/app/" class="bg-primary hover:bg-primary-dark text-white px-8 py-4 rounded-xl font-semibold text-lg transition transform hover:scale-105 shadow-lg hover:shadow-xl text-center">
-                             Bắt đầu ngay
-                        </a>
-                        <a href="https://maple-zip.github.io/quizly?r=https://raw.githubusercontent.com/maple-zip/quizly/refs/heads/main/test.zip" class="bg-white hover:bg-gray-50 text-primary border-2 border-primary px-8 py-4 rounded-xl font-semibold text-lg transition transform hover:scale-105 shadow-lg hover:shadow-xl text-center">
-                             Làm thử bài ôn tập
-                        </a>
-                    </div>
-                    <div class="flex items-center space-x-6 pt-4">
-                        <div class="flex items-center space-x-2">
-                            <svg class="w-5 h-5 text-primary" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                            </svg>
-                            <span class="text-gray-600 font-medium">Mã nguồn mở</span>
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <svg class="w-5 h-5 text-primary" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
-                            </svg>
-                            <span class="text-gray-600 font-medium">Miễn phí 100%</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="relative float-animation">
-                    <div class="bg-gradient-to-br from-primary to-primary-dark rounded-2xl shadow-2xl p-1">
-                        <div class="bg-white rounded-xl p-8">
-                            <img src="screenshot1.png" alt="Giao diện chính Quizly - Trang chủ" class="rounded-lg shadow-lg w-full">
-                        </div>
-                    </div>
-                    <div class="absolute -bottom-6 -right-6 bg-accent rounded-xl p-6 shadow-xl">
-                        <div class="text-3xl font-bold text-primary-dark">100%</div>
-                        <div class="text-sm text-gray-700 font-medium">Miễn phí</div>
-                    </div>
-                </div>
+    <section class="pt-24 sm:pt-32 pb-12 sm:pb-20 px-4 sm:px-6">
+        <div class="container mx-auto max-w-4xl text-center">
+            <h1 class="text-3xl sm:text-5xl font-bold text-gray-900 mb-4 sm:mb-6">
+                Ôn tập nhanh - Đơn giản và nhẹ nhàng
+            </h1>
+            <p class="text-base sm:text-xl text-gray-600 mb-6 sm:mb-8 leading-relaxed max-w-2xl mx-auto">
+                Nền tảng nhỏ tạo và làm bài ôn tập trực tuyến miễn phí, mã nguồn mở dựa trên Supabase
+            </p>
+            <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-6 sm:mb-8">
+                <a href="https://maple-zip.github.io/quizly/app/" class="bg-primary-600 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold hover:bg-primary-700 transition">
+                    Bắt đầu tạo bài
+                </a>
+                <a href="https://maple-zip.github.io/quizly?r=https://raw.githubusercontent.com/maple-zip/quizly/refs/heads/main/test.zip" class="bg-white text-primary-600 border-2 border-primary-600 px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold hover:bg-primary-50 transition">
+                    Làm thử bài mẫu
+                </a>
+            </div>
+            <div class="bg-primary-50 border-l-4 border-primary-500 p-3 sm:p-4 rounded-lg text-left text-sm text-primary-800 max-w-2xl mx-auto">
+                <p class="mb-2"><strong>Lưu ý quan trọng:</strong></p>
+                <ul class="space-y-1 ml-4 list-disc">
+                    <li>Mỗi đề trên cloud chỉ lưu trong khoảng <strong>7 ngày</strong> do giới hạn gói free của Supabase</li>
+                    <li>Chỉ dùng cho ôn tập, không dùng kiểm tra chính thức</li>
+                    <li>Miễn phí, mã nguồn mở, tự chịu trách nhiệm khi sử dụng</li>
+                </ul>
             </div>
         </div>
     </section>
 
     <!-- Features Section -->
-    <section id="features" class="py-20 px-6 bg-white">
-        <div class="container mx-auto">
-            <div class="text-center mb-16">
-                <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-                    Tính năng <span class="gradient-text">nổi bật</span>
-                </h2>
-                <p class="text-xl text-gray-600">Mọi thứ bạn cần để tạo bài ôn tập chuyên nghiệp</p>
+    <section id="features" class="py-12 sm:py-20 px-4 sm:px-6 bg-white">
+        <div class="container mx-auto max-w-6xl">
+            <h2 class="text-2xl sm:text-4xl font-bold text-gray-900 text-center mb-8 sm:mb-16">Tính năng chính</h2>
+            
+            <div class="grid sm:grid-cols-2 gap-6 sm:gap-8 mb-12 sm:mb-16">
+                <!-- Editor -->
+                <div class="bg-primary-50 rounded-xl p-6 sm:p-8 border border-primary-100">
+                    <div class="w-12 h-12 bg-primary-600 rounded-lg flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Editor (Soạn đề)</h3>
+                    <ul class="space-y-2 text-gray-700">
+                        <li class="flex gap-2">
+                            <span class="text-primary-600 mt-1">•</span>
+                            <span>Tạo câu hỏi trắc nghiệm ABCD, Đúng/Sai</span>
+                        </li>
+                        <li class="flex gap-2">
+                            <span class="text-primary-600 mt-1">•</span>
+                            <span>Upload hình ảnh, audio, video</span>
+                        </li>
+                        <li class="flex gap-2">
+                            <span class="text-primary-600 mt-1">•</span>
+                            <span>Tùy chỉnh thời gian, xáo trộn câu hỏi, đáp án</span>
+                        </li>
+                        <li class="flex gap-2">
+                            <span class="text-primary-600 mt-1">•</span>
+                            <span>Xuất file ZIP hoặc đăng lên cloud</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Review -->
+                <div class="bg-primary-50 rounded-xl p-6 sm:p-8 border border-primary-100">
+                    <div class="w-12 h-12 bg-primary-600 rounded-lg flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Review (Làm bài)</h3>
+                    <ul class="space-y-2 text-gray-700">
+                        <li class="flex gap-2">
+                            <span class="text-primary-600 mt-1">•</span>
+                            <span>Giao diện responsive trên điện thoại/desktop</span>
+                        </li>
+                        <li class="flex gap-2">
+                            <span class="text-primary-600 mt-1">•</span>
+                            <span>Bộ đếm giờ, cảnh báo hết thời gian</span>
+                        </li>
+                        <li class="flex gap-2">
+                            <span class="text-primary-600 mt-1">•</span>
+                            <span>Chấm điểm tự động, hiển thị kết quả chi tiết</span>
+                        </li>
+                        <li class="flex gap-2">
+                            <span class="text-primary-600 mt-1">•</span>
+                            <span>Hỗ trợ playback media trực tiếp</span>
+                        </li>
+                    </ul>
+                </div>
             </div>
 
-            <div class="grid md:grid-cols-3 gap-8">
-                <div class="bg-gradient-to-br from-primary/5 to-primary/10 rounded-2xl p-8 hover:shadow-xl transition transform hover:-translate-y-2">
-                    <div class="w-14 h-14 bg-primary rounded-xl flex items-center justify-center mb-6">
-                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                        </svg>
-                    </div>
-                    <h3 class="text-2xl font-bold text-gray-900 mb-3">Trắc nghiệm đa dạng</h3>
-                    <p class="text-gray-600 leading-relaxed">Hỗ trợ câu hỏi ABCD và Đúng/Sai với khả năng xáo trộn câu hỏi và đáp án</p>
+            <!-- Cloud Storage -->
+            <div class="bg-gray-50 rounded-xl p-6 sm:p-8 border border-gray-200 max-w-2xl mx-auto">
+                <div class="w-12 h-12 bg-primary-600 rounded-lg flex items-center justify-center mb-4 mx-auto">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/>
+                    </svg>
                 </div>
-
-                <div class="bg-gradient-to-br from-secondary/5 to-secondary/10 rounded-2xl p-8 hover:shadow-xl transition transform hover:-translate-y-2">
-                    <div class="w-14 h-14 bg-secondary rounded-xl flex items-center justify-center mb-6">
-                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                        </svg>
-                    </div>
-                    <h3 class="text-2xl font-bold text-gray-900 mb-3">Đa phương tiện</h3>
-                    <p class="text-gray-600 leading-relaxed">Chèn hình ảnh, âm thanh và video vào câu hỏi và đáp án một cách dễ dàng</p>
-                </div>
-
-                <div class="bg-gradient-to-br from-accent/10 to-accent/20 rounded-2xl p-8 hover:shadow-xl transition transform hover:-translate-y-2">
-                    <div class="w-14 h-14 bg-gradient-to-br from-primary to-primary-dark rounded-xl flex items-center justify-center mb-6">
-                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                    </div>
-                    <h3 class="text-2xl font-bold text-gray-900 mb-3">Quản lý thời gian</h3>
-                    <p class="text-gray-600 leading-relaxed">Đặt thời gian làm bài và lịch mở/đóng bài ôn tập linh hoạt</p>
-                </div>
-
-                <div class="bg-gradient-to-br from-primary/5 to-primary/10 rounded-2xl p-8 hover:shadow-xl transition transform hover:-translate-y-2">
-                    <div class="w-14 h-14 bg-primary rounded-xl flex items-center justify-center mb-6">
-                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                        </svg>
-                    </div>
-                    <h3 class="text-2xl font-bold text-gray-900 mb-3">Chấm điểm tự động</h3>
-                    <p class="text-gray-600 leading-relaxed">Hệ thống tự động chấm điểm và hiển thị kết quả chi tiết ngay lập tức</p>
-                </div>
-
-                <div class="bg-gradient-to-br from-secondary/5 to-secondary/10 rounded-2xl p-8 hover:shadow-xl transition transform hover:-translate-y-2">
-                    <div class="w-14 h-14 bg-secondary rounded-xl flex items-center justify-center mb-6">
-                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
-                        </svg>
-                    </div>
-                    <h3 class="text-2xl font-bold text-gray-900 mb-3">Responsive</h3>
-                    <p class="text-gray-600 leading-relaxed">Giao diện tối ưu cho mọi thiết bị từ máy tính đến điện thoại di động</p>
-                </div>
-
-                <div class="bg-gradient-to-br from-accent/10 to-accent/20 rounded-2xl p-8 hover:shadow-xl transition transform hover:-translate-y-2">
-                    <div class="w-14 h-14 bg-gradient-to-br from-primary to-primary-dark rounded-xl flex items-center justify-center mb-6">
-                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
-                        </svg>
-                    </div>
-                    <h3 class="text-2xl font-bold text-gray-900 mb-3">Dễ chia sẻ</h3>
-                    <p class="text-gray-600 leading-relaxed">Xuất bản và chia sẻ bài ôn tập chỉ với một link đơn giản</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Demo Section -->
-    <section id="demo" class="py-20 px-6 bg-gradient-to-br from-primary/5 to-secondary/5">
-        <div class="container mx-auto">
-            <div class="text-center mb-16">
-                <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-                    Trải nghiệm <span class="gradient-text">thực tế</span>
-                </h2>
-                <p class="text-xl text-gray-600">Xem cách Quizly hoạt động trong thực tế</p>
-            </div>
-
-            <div class="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-                <div class="bg-white rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition transform hover:-translate-y-2">
-                    <img src="screenshot2.png" alt="Giao diện editor Quizly - Tạo câu hỏi" class="w-full h-64 object-cover">
-                    <div class="p-6">
-                        <h3 class="text-2xl font-bold text-gray-900 mb-3">Editor mạnh mẽ</h3>
-                        <p class="text-gray-600 mb-4">Giao diện trực quan, dễ sử dụng với khả năng preview trực tiếp</p>
-                        <a href="https://maple-zip.github.io/quizly/app/" class="text-primary font-semibold hover:text-primary-dark transition inline-flex items-center">
-                            Thử ngay
-                            <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                            </svg>
-                        </a>
-                    </div>
-                </div>
-
-                <div class="bg-white rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition transform hover:-translate-y-2">
-                    <img src="screenshot3.png" alt="Giao diện làm bài ôn tập Quizly" class="w-full h-64 object-cover">
-                    <div class="p-6">
-                        <h3 class="text-2xl font-bold text-gray-900 mb-3">Làm bài mượt mà</h3>
-                        <p class="text-gray-600 mb-4">Trải nghiệm làm bài ôn tập trực tuyến mượt mà và chuyên nghiệp</p>
-                        <a href="https://maple-zip.github.io/quizly?r=https://raw.githubusercontent.com/maple-zip/quizly/refs/heads/main/test.zip" class="text-primary font-semibold hover:text-primary-dark transition inline-flex items-center">
-                            Làm thử
-                            <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                            </svg>
-                        </a>
-                    </div>
-                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-3 text-center">Cloud Storage</h3>
+                <ul class="space-y-2 text-gray-700">
+                    <li class="flex gap-2">
+                        <span class="text-primary-600 mt-1">•</span>
+                        <span>Backend chạy trên <a href="https://supabase.com/" target="_blank" class="text-primary-600 hover:text-primary-700 font-medium">Supabase</a></span>
+                    </li>
+                    <li class="flex gap-2">
+                        <span class="text-primary-600 mt-1">•</span>
+                        <span>Tự động xóa sau khoảng 7 ngày</span>
+                    </li>
+                    <li class="flex gap-2">
+                        <span class="text-primary-600 mt-1">•</span>
+                        <span>Chia sẻ bài ôn tập bằng link đơn giản</span>
+                    </li>
+                </ul>
             </div>
         </div>
     </section>
 
-    <!-- How it works -->
-    <section class="py-20 px-6 bg-white">
-        <div class="container mx-auto">
-            <div class="text-center mb-16">
-                <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-                    Cách sử dụng <span class="gradient-text">đơn giản</span>
-                </h2>
-                <p class="text-xl text-gray-600">Chỉ 3 bước để tạo bài ôn tập chuyên nghiệp</p>
-            </div>
+    <!-- Screenshots Section -->
+    <section id="screenshots" class="py-12 sm:py-20 px-4 sm:px-6 bg-gray-50">
+        <div class="container mx-auto max-w-6xl">
+            <h2 class="text-2xl sm:text-4xl font-bold text-gray-900 text-center mb-8 sm:mb-16">Hình ảnh demo</h2>
+            
+            <div class="space-y-8 sm:space-y-12">
+                <!-- Screenshot 1 -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <img src="screenshot1.png" alt="Trang chủ Quizly" class="w-full">
+                    <div class="p-4 sm:p-6">
+                        <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-2">Giao diện chính</h3>
+                        <p class="text-sm sm:text-base text-gray-600">Trang chủ Quizly với giao diện đơn giản, dễ sử dụng</p>
+                    </div>
+                </div>
 
-            <div class="max-w-4xl mx-auto">
-                <div class="relative">
-                    <div class="absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-gradient-to-b from-primary to-secondary hidden md:block"></div>
-                    
-                    <div class="space-y-12">
-                        <div class="flex flex-col md:flex-row items-center gap-8">
-                            <div class="md:w-1/2 md:text-right">
-                                <div class="bg-gradient-to-br from-primary/10 to-primary/20 rounded-2xl p-8">
-                                    <div class="text-5xl font-bold gradient-text mb-4">01</div>
-                                    <h3 class="text-2xl font-bold text-gray-900 mb-3">Tạo câu hỏi</h3>
-                                    <p class="text-gray-600">Sử dụng editor để tạo câu hỏi trắc nghiệm với hình ảnh, âm thanh và video</p>
-                                </div>
-                            </div>
-                            <div class="md:w-1/2">
-                                <div class="w-16 h-16 bg-primary rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto md:mx-0 shadow-lg">1</div>
-                            </div>
-                        </div>
+                <!-- Screenshot 2 -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <img src="screenshot2.png" alt="Editor tạo câu hỏi" class="w-full">
+                    <div class="p-4 sm:p-6">
+                        <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-2">Editor tạo câu hỏi</h3>
+                        <p class="text-sm sm:text-base text-gray-600">Công cụ soạn đề với khả năng thêm media và tùy chỉnh linh hoạt</p>
+                    </div>
+                </div>
 
-                        <div class="flex flex-col md:flex-row-reverse items-center gap-8">
-                            <div class="md:w-1/2 md:text-left">
-                                <div class="bg-gradient-to-br from-secondary/10 to-secondary/20 rounded-2xl p-8">
-                                    <div class="text-5xl font-bold text-secondary mb-4">02</div>
-                                    <h3 class="text-2xl font-bold text-gray-900 mb-3">Xuất bản</h3>
-                                    <p class="text-gray-600">Xuất file ZIP hoặc publish trực tiếp lên cloud để nhận link chia sẻ</p>
-                                </div>
-                            </div>
-                            <div class="md:w-1/2 flex md:justify-end">
-                                <div class="w-16 h-16 bg-secondary rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-lg">2</div>
-                            </div>
-                        </div>
-
-                        <div class="flex flex-col md:flex-row items-center gap-8">
-                            <div class="md:w-1/2 md:text-right">
-                                <div class="bg-gradient-to-br from-accent/20 to-accent/30 rounded-2xl p-8">
-                                    <div class="text-5xl font-bold gradient-text mb-4">03</div>
-                                    <h3 class="text-2xl font-bold text-gray-900 mb-3">Chia sẻ</h3>
-                                    <p class="text-gray-600">Gửi link cho học sinh và xem kết quả tự động được chấm điểm</p>
-                                </div>
-                            </div>
-                            <div class="md:w-1/2">
-                                <div class="w-16 h-16 bg-gradient-to-br from-primary to-primary-dark rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto md:mx-0 shadow-lg">3</div>
-                            </div>
-                        </div>
+                <!-- Screenshot 3 -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <img src="screenshot3.png" alt="Làm bài ôn tập" class="w-full">
+                    <div class="p-4 sm:p-6">
+                        <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-2">Làm bài ôn tập</h3>
+                        <p class="text-sm sm:text-base text-gray-600">Giao diện làm bài responsive với đếm giờ và chấm điểm tự động</p>
                     </div>
                 </div>
             </div>
@@ -305,77 +216,76 @@
     </section>
 
     <!-- CTA Section -->
-    <section class="py-20 px-6 bg-gradient-to-br from-primary to-primary-dark text-white">
-        <div class="container mx-auto text-center">
-            <h2 class="text-4xl md:text-5xl font-bold mb-6">Sẵn sàng bắt đầu?</h2>
-            <p class="text-xl md:text-2xl mb-10 text-white/90 max-w-2xl mx-auto">
-                Tạo bài ôn tập chuyên nghiệp của bạn ngay hôm nay - hoàn toàn miễn phí! <br /> Lưu ý: Do giới hạn máy chủ, mỗi đề ôn tập chỉ được lưu trong khoảng 7 ngày. <br /> Chỉ sử dụng trong ôn tập, không sử dụng khi kiểm tra nghiêm túc.
+    <section class="py-12 sm:py-20 px-4 sm:px-6 bg-primary-600 text-white">
+        <div class="container mx-auto max-w-3xl text-center">
+            <h2 class="text-2xl sm:text-4xl font-bold mb-4 sm:mb-6">Sử dụng ngay</h2>
+            <p class="text-base sm:text-lg mb-6 sm:mb-8 text-primary-50">
+                Bắt đầu tạo bài ôn tập của bạn hoặc thử nghiệm với bài mẫu
             </p>
-            <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                <a href="https://maple-zip.github.io/quizly/app/" class="bg-white text-primary hover:bg-gray-100 px-8 py-4 rounded-xl font-semibold text-lg transition transform hover:scale-105 shadow-lg hover:shadow-xl">
-                     Bắt đầu tạo bài
+            <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-6 sm:mb-8">
+                <a href="https://maple-zip.github.io/quizly/app/" class="bg-white text-primary-600 px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold hover:bg-gray-100 transition">
+                    Editor
                 </a>
-                <a href="https://github.com/maple-zip/quizly" target="_blank" class="bg-white/10 hover:bg-white/20 text-white border-2 border-white px-8 py-4 rounded-xl font-semibold text-lg transition transform hover:scale-105 backdrop-blur-sm">
-                    <span class="flex items-center justify-center gap-2">
-                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                            <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"/>
-                        </svg>
-                        GitHub
-                    </span>
+                <a href="https://maple-zip.github.io/quizly?r=https://raw.githubusercontent.com/maple-zip/quizly/refs/heads/main/test.zip" class="bg-primary-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold hover:bg-primary-800 transition border-2 border-white/20">
+                    Bài ôn tập mẫu
                 </a>
             </div>
         </div>
     </section>
 
     <!-- Footer -->
-    <footer class="bg-darker text-white/80 py-12 px-6">
-        <div class="container mx-auto">
-            <div class="grid md:grid-cols-3 gap-8 mb-8">
+    <footer class="py-8 sm:py-12 px-4 sm:px-6 bg-gray-900 text-gray-400">
+        <div class="container mx-auto max-w-6xl">
+            <div class="grid sm:grid-cols-3 gap-6 sm:gap-8 mb-6 sm:mb-8">
+                <!-- About -->
                 <div>
-                    <div class="flex items-center space-x-2 mb-4">
-                        <svg width="32" height="32" viewBox="0 0 40 40" class="text-primary">
-                            <rect width="40" height="40" rx="8" fill="currentColor"/>
-                            <text x="50%" y="50%" text-anchor="middle" dy=".35em" fill="white" font-size="24" font-weight="700">Q</text>
-                        </svg>
-                        <span class="text-2xl font-bold text-white">Quizly</span>
+                    <div class="flex items-center gap-2 mb-3 sm:mb-4">
+                        <img src="https://raw.githubusercontent.com/maple-zip/quizly/refs/heads/main/favicon.ico" alt="Quizly" class="w-6 h-6">
+                        <span class="text-lg font-bold text-white">Quizly</span>
                     </div>
-                    <p class="text-white/70 mb-4">
-                        Nền tảng ôn tập trực tuyến hiện đại, mã nguồn mở và hoàn toàn miễn phí.
+                    <p class="text-sm mb-3 sm:mb-4">
+                        Nền tảng nhỏ tạo và làm bài ôn tập trực tuyến miễn phí, mã nguồn mở
                     </p>
-                    <div class="flex space-x-4">
-                        <a href="https://github.com/maple-zip/quizly" target="_blank" class="text-white/70 hover:text-white transition">
-                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                                <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"/>
-                            </svg>
-                        </a>
-                    </div>
                 </div>
+
+                <!-- Links -->
                 <div>
-                    <h3 class="text-xl font-bold text-white mb-4">Liên kết nhanh</h3>
-                    <ul class="space-y-2">
-                        <li><a href="#features" class="text-white/70 hover:text-white transition">Tính năng</a></li>
-                        <li><a href="#demo" class="text-white/70 hover:text-white transition">Demo</a></li>
-                        <li><a href="https://maple-zip.github.io/quizly/app/" class="text-white/70 hover:text-white transition">Dùng ngay</a></li>
-                        <li><a href="https://github.com/maple-zip/quizly" target="_blank" class="text-white/70 hover:text-white transition">GitHub</a></li>
+                    <h3 class="text-base sm:text-lg font-bold text-white mb-3 sm:mb-4">Liên kết</h3>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="#features" class="hover:text-white transition">Tính năng</a></li>
+                        <li><a href="#screenshots" class="hover:text-white transition">Ảnh demo</a></li>
+                        <li><a href="https://maple-zip.github.io/quizly/app/" class="hover:text-white transition">Editor</a></li>
+                        <li><a href="https://github.com/maple-zip/quizly" target="_blank" class="hover:text-white transition">GitHub</a></li>
                     </ul>
                 </div>
+
+                <!-- Contact & License -->
                 <div>
-                    <h3 class="text-xl font-bold text-white mb-4">Giấy phép</h3>
-                    <p class="text-white/70 mb-4">
-                        Quizly được phát hành dưới giấy phép 
-                        <a href="https://www.gnu.org/licenses/gpl-3.0.html" target="_blank" class="text-primary hover:text-accent transition font-medium">
-                            GNU General Public License v3.0
-                        </a>
-                    </p>
-                    <p class="text-white/60 text-sm">
-                        © 2026 Quizly. Một dự án mã nguồn mở bởi maple-zip.
+                    <h3 class="text-base sm:text-lg font-bold text-white mb-3 sm:mb-4">Liên hệ & Đóng góp</h3>
+                    <ul class="space-y-2 text-sm mb-3 sm:mb-4">
+                        <li>
+                            <a href="https://github.com/maple-zip" target="_blank" class="hover:text-white transition">
+                                GitHub: maple-zip
+                            </a>
+                        </li>
+                        <li>
+                            <a href="mailto:nguyenhuuhoa@proton.me" class="hover:text-white transition">
+                                Email: nguyenhuuhoa@proton.me
+                            </a>
+                        </li>
+                    </ul>
+                    <p class="text-xs">
+                        Giấy phép: <a href="https://www.gnu.org/licenses/gpl-3.0.html" target="_blank" class="text-primary-400 hover:text-primary-300 transition">GNU GPL v3.0</a>
                     </p>
                 </div>
             </div>
-            <div class="pt-8 border-t border-white/10 text-center text-white/60 text-sm">
-                <p>Phiên bản 1.0.0 | Được xây dựng với Tailwind CSS</p>
+
+            <div class="pt-6 sm:pt-8 border-t border-gray-800 text-center text-xs sm:text-sm">
+                <p>© 2026 maple-zip. Chào đón mọi đóng góp qua GitHub Issues và Pull Requests.</p>
+                <p class="mt-2 text-gray-500">⭐ Nếu thấy hữu ích, hãy giúp tôi 1 star repo trên GitHub!</p>
             </div>
         </div>
     </footer>
+
 </body>
 </html>

@@ -95,7 +95,7 @@
         <div class="container mx-auto max-w-6xl">
             <h2 class="text-2xl sm:text-4xl font-bold text-gray-900 text-center mb-8 sm:mb-16">Tính năng chính</h2>
             
-            <div class="grid sm:grid-cols-2 gap-6 sm:gap-8 mb-12 sm:mb-16">
+            <div class="grid sm:grid-cols-2 gap-6 sm:gap-8">
                 <!-- Editor -->
                 <div class="bg-primary-50 rounded-xl p-6 sm:p-8 border border-primary-100">
                     <div class="w-12 h-12 bg-primary-600 rounded-lg flex items-center justify-center mb-4">
@@ -151,30 +151,62 @@
                         </li>
                     </ul>
                 </div>
-            </div>
 
-            <!-- Cloud Storage -->
-            <div class="bg-gray-50 rounded-xl p-6 sm:p-8 border border-gray-200 max-w-2xl mx-auto">
-                <div class="w-12 h-12 bg-primary-600 rounded-lg flex items-center justify-center mb-4 mx-auto">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/>
-                    </svg>
+                <!-- Cloud Storage -->
+                <div class="bg-primary-50 rounded-xl p-6 sm:p-8 border border-primary-100">
+                    <div class="w-12 h-12 bg-primary-600 rounded-lg flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Cloud Storage</h3>
+                    <ul class="space-y-2 text-gray-700">
+                        <li class="flex gap-2">
+                            <span class="text-primary-600 mt-1">•</span>
+                            <span>Backend chạy trên <a href="https://supabase.com/" target="_blank" class="text-primary-600 hover:text-primary-700 font-medium">Supabase</a></span>
+                        </li>
+                        <li class="flex gap-2">
+                            <span class="text-primary-600 mt-1">•</span>
+                            <span>Chia sẻ bài ôn tập bằng link đơn giản</span>
+                        </li>
+                        <li class="flex gap-2">
+                            <span class="text-primary-600 mt-1">•</span>
+                            <span>Tự động xóa sau ~7 ngày (giới hạn gói free của Supabase)</span>
+                        </li>
+                        <li class="flex gap-2">
+                            <span class="text-primary-600 mt-1">•</span>
+                            <span>Dung lượng lưu trữ giới hạn 50MB mỗi bài ôn tập</span>
+                        </li>
+                    </ul>
                 </div>
-                <h3 class="text-xl font-bold text-gray-900 mb-3 text-center">Cloud Storage</h3>
-                <ul class="space-y-2 text-gray-700">
-                    <li class="flex gap-2">
-                        <span class="text-primary-600 mt-1">•</span>
-                        <span>Backend chạy trên <a href="https://supabase.com/" target="_blank" class="text-primary-600 hover:text-primary-700 font-medium">Supabase</a></span>
-                    </li>
-                    <li class="flex gap-2">
-                        <span class="text-primary-600 mt-1">•</span>
-                        <span>Tự động xóa sau khoảng 7 ngày</span>
-                    </li>
-                    <li class="flex gap-2">
-                        <span class="text-primary-600 mt-1">•</span>
-                        <span>Chia sẻ bài ôn tập bằng link đơn giản</span>
-                    </li>
-                </ul>
+
+                <!-- Open Source -->
+                <div class="bg-primary-50 rounded-xl p-6 sm:p-8 border border-primary-100">
+                    <div class="w-12 h-12 bg-primary-600 rounded-lg flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Open Source</h3>
+                    <ul class="space-y-2 text-gray-700">
+                        <li class="flex gap-2">
+                            <span class="text-primary-600 mt-1">•</span>
+                            <span>Mã nguồn mở dưới giấy phép GNU GPL v3.0</span>
+                        </li>
+                        <li class="flex gap-2">
+                            <span class="text-primary-600 mt-1">•</span>
+                            <span>Có thể tự host và tùy chỉnh theo nhu cầu</span>
+                        </li>
+                        <li class="flex gap-2">
+                            <span class="text-primary-600 mt-1">•</span>
+                            <span>Chào đón đóng góp từ cộng đồng</span>
+                        </li>
+                        <li class="flex gap-2">
+                            <span class="text-primary-600 mt-1">•</span>
+                            <span>Không có quảng cáo</span>
+                        </li>
+                    </ul>
+                </div>
             </div>
         </div>
     </section>
@@ -283,6 +315,7 @@
             <div class="pt-6 sm:pt-8 border-t border-gray-800 text-center text-xs sm:text-sm">
                 <p>© 2026 maple-zip. Chào đón mọi đóng góp qua GitHub Issues và Pull Requests.</p>
                 <p class="mt-2 text-gray-500">⭐ Nếu thấy hữu ích, hãy giúp tôi 1 star repo trên GitHub!</p>
+                <p>Dự án này chỉ là khởi đầu, tôi đang phát triển một nền tảng ôn tập & kiểm tra mạnh mẽ trong tương lai.</p>
             </div>
         </div>
     </footer>

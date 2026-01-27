@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quizly Editor - Soạn đề thi trực tuyến</title>
+    <meta name="description" content="Công cụ soạn bài kiểm tra trực tuyến - Hỗ trợ trắc nghiệm ABCD và Đúng/Sai">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        edu: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            200: '#bfdbfe',
+                            300: '#93c5fd',
+                            400: '#60a5fa',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .spinner {
+            border: 3px solid #e5e7eb;
+            border-top: 3px solid #2563eb;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            animation: spin 0.8s linear infinite;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #94a3b8;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+        /* Focus styles */
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-40">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-edu-600 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-bold text-slate-800">Quizly Editor</h1>
+                        <p class="text-xs text-slate-500 hidden sm:block">Soạn đề thi trực tuyến</p>
+                    </div>
+                </div>
+                
+                <!-- Action buttons -->
+                <div class="flex items-center gap-2">
+                    <button onclick="exportZip()" class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                        </svg>
+                        <span class="hidden sm:inline">Tải ZIP</span>
+                    </button>
+                    <label class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                        </svg>
+                        <span class="hidden sm:inline">Tải lên</span>
+                        <input type="file" accept=".zip" onchange="importZip(event)" class="hidden">
+                    </label>
+                    <button onclick="openPublishModal()" class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white bg-edu-600 rounded-lg hover:bg-edu-700 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path>
+                        </svg>
+                        <span>Xuất bản</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 sm:px-6 py-6">
+        <!-- Config Section -->
+        <section class="bg-white rounded-xl border border-slate-200 p-5 mb-6">
+            <div class="flex items-center justify-between mb-5">
+                <h2 class="text-base font-semibold text-slate-800 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-edu-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                    Cấu hình đề thi
+                </h2>
+                <button onclick="clearAll()" class="text-sm text-red-600 hover:text-red-700 font-medium flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                    Xóa tất cả
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1.5">Tiêu đề đề thi</label>
+                    <input type="text" id="title" placeholder="VD: Kiểm tra Toán học kỳ I" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1.5">Môn học</label>
+                    <input type="text" id="subject" placeholder="VD: Toán" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1.5">Khối lớp</label>
+                    <input type="text" id="grade" placeholder="VD: 10" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1.5">Tác giả</label>
+                    <input type="text" id="author" placeholder="Tên giáo viên" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg">
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
+                <div class="lg:col-span-2">
+                    <label class="block text-sm font-medium text-slate-700 mb-1.5">Mô tả</label>
+                    <textarea id="description" placeholder="Mô tả ngắn về bài kiểm tra" rows="2" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg resize-none"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1.5">Thời gian (phút)</label>
+                    <input type="number" id="duration" value="45" min="0" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg">
+                    <p class="text-xs text-slate-500 mt-1">0 = không giới hạn</p>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1.5">Thời gian bắt đầu</label>
+                    <input type="datetime-local" id="startTime" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1.5">Thời gian kết thúc</label>
+                    <input type="datetime-local" id="endTime" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg">
+                </div>
+            </div>
+            
+            <div class="flex flex-wrap gap-6 pt-2">
+                <label class="flex items-center gap-2 cursor-pointer select-none">
+                    <input type="checkbox" id="shuffleQuestions" class="w-4 h-4 text-edu-600 border-slate-300 rounded focus:ring-edu-500">
+                    <span class="text-sm text-slate-700">Xáo trộn câu hỏi</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer select-none">
+                    <input type="checkbox" id="shuffleAnswers" class="w-4 h-4 text-edu-600 border-slate-300 rounded focus:ring-edu-500">
+                    <span class="text-sm text-slate-700">Xáo trộn đáp án</span>
+                </label>
+            </div>
+        </section>
+
+        <!-- Questions Section -->
+        <section class="bg-white rounded-xl border border-slate-200 p-5">
+            <div class="flex items-center justify-between mb-5">
+                <h2 class="text-base font-semibold text-slate-800 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-edu-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    Danh sách câu hỏi
+                    <span id="questionCount" class="text-xs font-normal text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">0 câu</span>
+                </h2>
+            </div>
+            
+            <!-- Add Question Buttons - OPTIMIZED: Direct access instead of modal -->
+            <div class="flex flex-wrap gap-3 mb-5 p-4 bg-edu-50 rounded-xl border border-edu-100">
+                <span class="text-sm font-medium text-edu-700 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    </svg>
+                    Thêm câu hỏi:
+                </span>
+                <button onclick="addQuestion('multiple_choice')" class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-edu-600 rounded-lg hover:bg-edu-700 transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    Trắc nghiệm ABCD
+                </button>
+                <button onclick="addQuestion('true_false_group')" class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-edu-700 bg-white border-2 border-edu-300 rounded-lg hover:bg-edu-50 hover:border-edu-400 transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
+                    </svg>
+                    Đúng / Sai
+                </button>
+            </div>
+            
+            <!-- Questions List -->
+            <div id="questionsList" class="space-y-4"></div>
+            
+            <!-- Empty State -->
+            <div id="emptyState" class="text-center py-12">
+                <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                    </svg>
+                </div>
+                <h3 class="text-sm font-medium text-slate-600 mb-1">Chưa có câu hỏi nào</h3>
+                <p class="text-sm text-slate-500">Nhấn nút ở trên để thêm câu hỏi mới</p>
+            </div>
+        </section>
+    </main>
+
+    <!-- Publish Modal -->
+    <div id="publishModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b border-slate-200">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-semibold text-slate-800 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-edu-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path>
+                        </svg>
+                        Xuất bản đề thi
+                    </h3>
+                    <button onclick="closePublishModal()" class="text-slate-400 hover:text-slate-600">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="p-6">
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-5">
+                    <p class="text-sm text-blue-800">
+                        Hệ thống sẽ tạo file ZIP và tải lên server. Sau khi hoàn tất, bạn sẽ nhận được link để chia sẻ cho học sinh làm bài.
+                    </p>
+                    <p class="text-xs text-blue-600 mt-2">⏰ Lưu ý: Mỗi đề được lưu trong 7 ngày.</p>
+                </div>
+                
+                <div id="uploadStatus" class="hidden text-center text-slate-600 text-sm mb-4">
+                    Đang xử lý...
+                </div>
+                
+                <div class="flex justify-center mb-5">
+                    <div class="cf-turnstile" data-sitekey="0x4AAAAAACKdJDqJa3PzSepQ" data-callback="onTurnstileSuccess"></div>
+                </div>
+
+                <div id="publishLoading" class="hidden text-center py-6">
+                    <div class="spinner mx-auto mb-3"></div>
+                    <p class="text-sm text-slate-600">Đang xuất bản...</p>
+                </div>
+
+                <div id="publishResult"></div>
+            </div>
+            
+            <div class="p-6 pt-0 flex gap-3">
+                <button id="publishBtn" onclick="publishQuiz()" disabled class="flex-1 py-2.5 text-sm font-semibold text-white bg-edu-600 rounded-lg hover:bg-edu-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                    Xuất bản
+                </button>
+                <button onclick="closePublishModal()" class="px-6 py-2.5 text-sm font-medium text-slate-700 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors">
+                    Đóng
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const CONFIG = {
+            edgeFunctionUrl: 'https://nlopfplwzrkmvczbwngb.supabase.co/functions/v1/quizly-upload-api',
+            supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5sb3BmcGx3enJrbXZjemJ3bmdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc1MzI2MjcsImV4cCI6MjA4MzEwODYyN30.188yIrRkMwu9blprUnzpXjyg9PmS_Thiiafey27CXL8'
+        };
+
+        const DB_NAME = 'quizly_zip_storage';
+        const STORE_NAME = 'zip_files';
+
+        let questions = [];
+        let mediaFiles = {};
+        let turnstileToken = null;
+        let publishedLink = null;
+
+        // IndexedDB functions
+        function openDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, 1);
+                request.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains(STORE_NAME)) {
+                        db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                    }
+                };
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        async function loadZipFromIndexedDB() {
+            try {
+                const db = await openDB();
+                return new Promise((resolve, reject) => {
+                    const tx = db.transaction(STORE_NAME, 'readonly');
+                    const store = tx.objectStore(STORE_NAME);
+                    const request = store.get('current_quiz');
+                    request.onsuccess = () => {
+                        if (request.result && request.result.blob) {
+                            resolve(request.result.blob);
+                        } else {
+                            resolve(null);
+                        }
+                    };
+                    request.onerror = () => reject(request.error);
+                });
+            } catch (err) {
+                console.error('Error loading from IndexedDB:', err);
+                return null;
+            }
+        }
+
+        async function clearIndexedDB() {
+            try {
+                const db = await openDB();
+                return new Promise((resolve, reject) => {
+                    const tx = db.transaction(STORE_NAME, 'readwrite');
+                    const store = tx.objectStore(STORE_NAME);
+                    const request = store.delete('current_quiz');
+                    request.onsuccess = () => resolve();
+                    request.onerror = () => reject(request.error);
+                });
+            } catch (err) {
+                console.error('Error clearing IndexedDB:', err);
+            }
+        }
+
+        // Initialize
+        async function init() {
+            const now = new Date();
+            const nextYear = new Date(now.getFullYear() + 1, 11, 31, 23, 59);
+            document.getElementById('startTime').value = now.toISOString().slice(0, 16);
+            document.getElementById('endTime').value = nextYear.toISOString().slice(0, 16);
+
+            const zipBlob = await loadZipFromIndexedDB();
+            if (zipBlob) {
+                try {
+                    await loadZipFromBlob(zipBlob);
+                    await clearIndexedDB();
+                } catch (err) {
+                    console.error('Error loading ZIP from IndexedDB:', err);
+                }
+            }
+
+            renderQuestions();
+        }
+
+        async function loadZipFromBlob(blob) {
+            const zip = await JSZip.loadAsync(blob);
+
+            if (zip.file('config.yaml')) {
+                const configText = await zip.file('config.yaml').async('text');
+                const config = jsyaml.load(configText);
+
+                document.getElementById('title').value = config.metadata.title || '';
+                document.getElementById('subject').value = config.metadata.subject || '';
+                document.getElementById('grade').value = config.metadata.grade || '';
+                document.getElementById('author').value = config.metadata.author || '';
+                document.getElementById('description').value = config.exam.description || '';
+                document.getElementById('duration').value = config.exam.duration_minutes || 45;
+                if (config.exam.start_time) {
+                    document.getElementById('startTime').value = config.exam.start_time.replace(' ', 'T');
+                }
+                if (config.exam.end_time) {
+                    document.getElementById('endTime').value = config.exam.end_time.replace(' ', 'T');
+                }
+                document.getElementById('shuffleQuestions').checked = config.exam.shuffle_questions || false;
+                document.getElementById('shuffleAnswers').checked = config.exam.shuffle_answers || false;
+            }
+
+            if (zip.file('questions.yaml')) {
+                const questionsText = await zip.file('questions.yaml').async('text');
+                const questionsData = jsyaml.load(questionsText);
+
+                questions = [];
+                mediaFiles = {};
+
+                if (questionsData.questions) {
+                    questions = questionsData.questions.map(q => {
+                        const normalized = { ...q };
+                        
+                        if (normalized.question.media) {
+                            normalized.question.media = Array.isArray(normalized.question.media) 
+                                ? normalized.question.media 
+                                : [normalized.question.media];
+                        } else {
+                            normalized.question.media = [];
+                        }
+
+                        if (q.type === 'multiple_choice') {
+                            Object.keys(normalized.choices).forEach(key => {
+                                if (normalized.choices[key].media) {
+                                    normalized.choices[key].media = Array.isArray(normalized.choices[key].media)
+                                        ? normalized.choices[key].media
+                                        : [normalized.choices[key].media];
+                                } else {
+                                    normalized.choices[key].media = [];
+                                }
+                            });
+                        } else {
+                            Object.keys(normalized.items).forEach(key => {
+                                if (normalized.items[key].media) {
+                                    normalized.items[key].media = Array.isArray(normalized.items[key].media)
+                                        ? normalized.items[key].media
+                                        : [normalized.items[key].media];
+                                } else {
+                                    normalized.items[key].media = [];
+                                }
+                            });
+                        }
+
+                        return normalized;
+                    });
+                }
+
+                const mediaFolder = zip.folder('media');
+                if (mediaFolder) {
+                    const mediaPromises = [];
+                    mediaFolder.forEach((relativePath, zipEntry) => {
+                        if (!zipEntry.dir) {
+                            mediaPromises.push(
+                                zipEntry.async('blob').then(blob => {
+                                    const file = new File([blob], relativePath);
+                                    mediaFiles[relativePath] = file;
+                                })
+                            );
+                        }
+                    });
+                    await Promise.all(mediaPromises);
+                }
+            }
+        }
+
+        function updateQuestionCount() {
+            const count = questions.length;
+            document.getElementById('questionCount').textContent = `${count} câu`;
+            document.getElementById('emptyState').classList.toggle('hidden', count > 0);
+        }
+
+        function renderQuestions() {
+            const list = document.getElementById('questionsList');
+            list.innerHTML = questions.map((q, idx) => {
+                if (q.type === 'multiple_choice') {
+                    return renderMCQuestion(q, idx);
+                } else {
+                    return renderTFQuestion(q, idx);
+                }
+            }).join('');
+            updateQuestionCount();
+        }
+
+        function getMediaType(fileName) {
+            const extension = fileName.split('.').pop().toLowerCase();
+            const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'];
+            const audioExtensions = ['mp3', 'wav', 'ogg', 'm4a', 'aac'];
+            const videoExtensions = ['mp4', 'webm', 'ogg', 'mov', 'avi', 'mkv'];
+            
+            if (imageExtensions.includes(extension)) return 'image';
+            if (audioExtensions.includes(extension)) return 'audio';
+            if (videoExtensions.includes(extension)) return 'video';
+            return 'unknown';
+        }
+
+        function createMediaPreview(fileName, idx, type, context, key = null) {
+            const mediaType = getMediaType(fileName);
+            const file = mediaFiles[fileName];
+            
+            let previewHTML = '';
+            
+            if (mediaType === 'image') {
+                const url = URL.createObjectURL(file);
+                previewHTML = `
+                    <div class="bg-slate-50 border border-slate-200 rounded-lg p-3">
+                        <img src="${url}" alt="Hình ảnh" onload="URL.revokeObjectURL(this.src)" class="max-w-full max-h-40 rounded mx-auto">
+                        <div class="flex gap-2 mt-2 justify-center">
+                            <button onclick="downloadMedia('${fileName}')" class="px-2.5 py-1 text-xs font-medium bg-edu-600 text-white rounded hover:bg-edu-700">Tải</button>
+                            <button onclick="${getRemoveMediaFunction(idx, type, context, key, fileName)}" class="px-2.5 py-1 text-xs font-medium bg-red-500 text-white rounded hover:bg-red-600">Xóa</button>
+                        </div>
+                    </div>
+                `;
+            } else if (mediaType === 'audio') {
+                const url = URL.createObjectURL(file);
+                previewHTML = `
+                    <div class="bg-slate-50 border border-slate-200 rounded-lg p-3">
+                        <audio controls class="w-full max-w-md mx-auto">
+                            <source src="${url}" type="audio/${file.name.split('.').pop()}">
+                        </audio>
+                        <div class="flex gap-2 mt-2 justify-center">
+                            <button onclick="downloadMedia('${fileName}')" class="px-2.5 py-1 text-xs font-medium bg-edu-600 text-white rounded hover:bg-edu-700">Tải</button>
+                            <button onclick="${getRemoveMediaFunction(idx, type, context, key, fileName)}" class="px-2.5 py-1 text-xs font-medium bg-red-500 text-white rounded hover:bg-red-600">Xóa</button>
+                        </div>
+                    </div>
+                `;
+            } else if (mediaType === 'video') {
+                const url = URL.createObjectURL(file);
+                previewHTML = `
+                    <div class="bg-slate-50 border border-slate-200 rounded-lg p-3">
+                        <video controls class="max-w-full max-h-48 rounded mx-auto">
+                            <source src="${url}" type="video/${file.name.split('.').pop()}">
+                        </video>
+                        <div class="flex gap-2 mt-2 justify-center">
+                            <button onclick="downloadMedia('${fileName}')" class="px-2.5 py-1 text-xs font-medium bg-edu-600 text-white rounded hover:bg-edu-700">Tải</button>
+                            <button onclick="${getRemoveMediaFunction(idx, type, context, key, fileName)}" class="px-2.5 py-1 text-xs font-medium bg-red-500 text-white rounded hover:bg-red-600">Xóa</button>
+                        </div>
+                    </div>
+                `;
+            } else {
+                return `
+                    <div class="flex items-center gap-2 bg-slate-100 px-3 py-2 rounded">
+                        <span class="text-sm text-slate-700">${fileName}</span>
+                        <button onclick="downloadMedia('${fileName}')" class="px-2 py-1 text-xs bg-edu-600 text-white rounded hover:bg-edu-700">Tải</button>
+                        <button onclick="${getRemoveMediaFunction(idx, type, context, key, fileName)}" class="px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600">×</button>
+                    </div>
+                `;
+            }
+
+            return previewHTML;
+        }
+
+        function getRemoveMediaFunction(idx, type, context, key, fileName) {
+            if (type === 'question') {
+                const mediaIdx = questions[idx].question.media.indexOf(fileName);
+                return `removeQuestionMedia(${idx}, ${mediaIdx})`;
+            } else if (type === 'choice') {
+                const mediaIdx = questions[idx].choices[key].media.indexOf(fileName);
+                return `removeChoiceMedia(${idx}, '${key}', ${mediaIdx})`;
+            } else if (type === 'tfitem') {
+                const mediaIdx = questions[idx].items[key].media.indexOf(fileName);
+                return `removeTFItemMedia(${idx}, '${key}', ${mediaIdx})`;
+            }
+        }
+
+        function downloadMedia(fileName) {
+            const file = mediaFiles[fileName];
+            if (file) {
+                const url = URL.createObjectURL(file);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileName;
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+        }
+
+        function renderMCQuestion(q, idx) {
+            const mediaList = q.question.media && q.question.media.length > 0 ? 
+                `<div class="space-y-2 mt-3">${q.question.media.map(fileName => 
+                    createMediaPreview(fileName, idx, 'question', 'question')
+                ).join('')}</div>` : '';
+
+            const choices = Object.entries(q.choices).map(([key, choice]) => {
+                const choiceMedia = choice.media && choice.media.length > 0 ? 
+                    `<div class="space-y-2 mt-2">${choice.media.map(fileName => 
+                        createMediaPreview(fileName, idx, 'choice', 'choice', key)
+                    ).join('')}</div>` : '';
+
+                const isCorrect = q.correct === key;
+                return `
+                    <div class="flex items-start gap-3 p-3 rounded-lg border ${isCorrect ? 'bg-green-50 border-green-300' : 'bg-white border-slate-200'}">
+                        <div class="flex items-center gap-2 pt-1">
+                            <input type="radio" name="correct_${idx}" value="${key}" 
+                                ${isCorrect ? 'checked' : ''} 
+                                onchange="setCorrect(${idx}, '${key}')"
+                                class="w-4 h-4 text-edu-600 border-slate-300 focus:ring-edu-500">
+                            <span class="w-7 h-7 text-xs font-bold rounded-full flex items-center justify-center ${isCorrect ? 'bg-green-600 text-white' : 'bg-edu-100 text-edu-700'}">${key}</span>
+                        </div>
+                        <div class="flex-1">
+                            <input type="text" value="${choice.text}" 
+                                onchange="updateChoiceText(${idx}, '${key}', this.value)" 
+                                placeholder="Nội dung đáp án ${key}" 
+                                class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg">
+                            <div class="flex gap-2 mt-2">
+                                <label class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 bg-slate-100 rounded-lg cursor-pointer hover:bg-slate-200">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                    </svg>
+                                    Thêm media
+                                    <input type="file" multiple onchange="addChoiceMedia(${idx}, '${key}', event)" class="hidden">
+                                </label>
+                            </div>
+                            ${choiceMedia}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            return `
+                <div class="bg-white border-2 border-edu-200 rounded-xl overflow-hidden">
+                    <div class="bg-edu-50 px-5 py-3 flex items-center justify-between border-b border-edu-200">
+                        <div class="flex items-center gap-3">
+                            <span class="w-8 h-8 bg-edu-600 text-white rounded-lg flex items-center justify-center text-sm font-bold">${idx + 1}</span>
+                            <span class="text-sm font-semibold text-edu-800">Trắc nghiệm ABCD</span>
+                        </div>
+                        <button onclick="deleteQuestion(${idx})" class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="p-5">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-slate-700 mb-1.5">Câu hỏi</label>
+                            <textarea onchange="updateQuestionText(${idx}, this.value)" rows="2" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg resize-none">${q.question.text}</textarea>
+                            <label class="inline-flex items-center gap-1.5 mt-2 px-3 py-1.5 text-xs font-medium text-slate-600 bg-slate-100 rounded-lg cursor-pointer hover:bg-slate-200">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                                Thêm media
+                                <input type="file" multiple onchange="addQuestionMedia(${idx}, event)" class="hidden">
+                            </label>
+                            ${mediaList}
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-2">Đáp án <span class="text-xs font-normal text-slate-500">(chọn đáp án đúng)</span></label>
+                            <div class="space-y-2">
+                                ${choices}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderTFQuestion(q, idx) {
+            const mediaList = q.question.media && q.question.media.length > 0 ? 
+                `<div class="space-y-2 mt-3">${q.question.media.map(fileName => 
+                    createMediaPreview(fileName, idx, 'question', 'question')
+                ).join('')}</div>` : '';
+
+            const items = Object.entries(q.items).map(([key, item]) => {
+                const itemMedia = item.media && item.media.length > 0 ? 
+                    `<div class="space-y-2 mt-2">${item.media.map(fileName => 
+                        createMediaPreview(fileName, idx, 'tfitem', 'tfitem', key)
+                    ).join('')}</div>` : '';
+
+                return `
+                    <div class="flex items-start gap-3 p-3 rounded-lg border ${item.correct ? 'bg-green-50 border-green-300' : 'bg-red-50 border-red-200'}">
+                        <span class="w-7 h-7 text-xs font-bold rounded-full flex items-center justify-center bg-slate-200 text-slate-700 mt-1">${key}</span>
+                        <div class="flex-1">
+                            <div class="flex gap-2">
+                                <input type="text" value="${item.text}" 
+                                    onchange="updateTFItemText(${idx}, '${key}', this.value)" 
+                                    placeholder="Mệnh đề ${key}" 
+                                    class="flex-1 px-3 py-2 text-sm border border-slate-300 rounded-lg">
+                                <select onchange="updateTFItemCorrect(${idx}, '${key}', this.value)" class="px-3 py-2 text-sm border border-slate-300 rounded-lg font-medium ${item.correct ? 'text-green-700' : 'text-red-700'}">
+                                    <option value="true" ${item.correct ? 'selected' : ''}>Đúng</option>
+                                    <option value="false" ${!item.correct ? 'selected' : ''}>Sai</option>
+                                </select>
+                            </div>
+                            <label class="inline-flex items-center gap-1.5 mt-2 px-3 py-1.5 text-xs font-medium text-slate-600 bg-white border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                                Thêm media
+                                <input type="file" multiple onchange="addTFItemMedia(${idx}, '${key}', event)" class="hidden">
+                            </label>
+                            ${itemMedia}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            return `
+                <div class="bg-white border-2 border-teal-200 rounded-xl overflow-hidden">
+                    <div class="bg-teal-50 px-5 py-3 flex items-center justify-between border-b border-teal-200">
+                        <div class="flex items-center gap-3">
+                            <span class="w-8 h-8 bg-teal-600 text-white rounded-lg flex items-center justify-center text-sm font-bold">${idx + 1}</span>
+                            <span class="text-sm font-semibold text-teal-800">Đúng / Sai</span>
+                        </div>
+                        <button onclick="deleteQuestion(${idx})" class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="p-5">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-slate-700 mb-1.5">Đề bài chung</label>
+                            <textarea onchange="updateQuestionText(${idx}, this.value)" rows="2" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg resize-none">${q.question.text}</textarea>
+                            <label class="inline-flex items-center gap-1.5 mt-2 px-3 py-1.5 text-xs font-medium text-slate-600 bg-slate-100 rounded-lg cursor-pointer hover:bg-slate-200">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                                Thêm media
+                                <input type="file" multiple onchange="addQuestionMedia(${idx}, event)" class="hidden">
+                            </label>
+                            ${mediaList}
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-2">Các mệnh đề</label>
+                            <div class="space-y-2">
+                                ${items}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function addQuestion(type) {
+            if (type === 'multiple_choice') {
+                questions.push({
+                    type: 'multiple_choice',
+                    question: { text: '', media: [] },
+                    choices: {
+                        A: { text: '', media: [] },
+                        B: { text: '', media: [] },
+                        C: { text: '', media: [] },
+                        D: { text: '', media: [] }
+                    },
+                    correct: 'A'
+                });
+            } else {
+                questions.push({
+                    type: 'true_false_group',
+                    question: { text: '', media: [] },
+                    items: {
+                        a: { text: '', media: [], correct: true },
+                        b: { text: '', media: [], correct: false },
+                        c: { text: '', media: [], correct: true },
+                        d: { text: '', media: [], correct: false }
+                    }
+                });
+            }
+            renderQuestions();
+            
+            // Scroll to the new question
+            setTimeout(() => {
+                const list = document.getElementById('questionsList');
+                const lastChild = list.lastElementChild;
+                if (lastChild) {
+                    lastChild.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 100);
+        }
+
+        function deleteQuestion(idx) {
+            if (confirm('Xóa câu hỏi này?')) {
+                const question = questions[idx];
+                
+                if (question.question.media) {
+                    question.question.media.forEach(fileName => {
+                        delete mediaFiles[fileName];
+                    });
+                }
+                
+                if (question.type === 'multiple_choice' && question.choices) {
+                    Object.values(question.choices).forEach(choice => {
+                        if (choice.media) {
+                            choice.media.forEach(fileName => {
+                                delete mediaFiles[fileName];
+                            });
+                        }
+                    });
+                } else if (question.type === 'true_false_group' && question.items) {
+                    Object.values(question.items).forEach(item => {
+                        if (item.media) {
+                            item.media.forEach(fileName => {
+                                delete mediaFiles[fileName];
+                            });
+                        }
+                    });
+                }
+                
+                questions.splice(idx, 1);
+                renderQuestions();
+            }
+        }
+
+        function updateQuestionText(idx, text) {
+            questions[idx].question.text = text;
+        }
+
+        function updateChoiceText(idx, key, text) {
+            questions[idx].choices[key].text = text;
+        }
+
+        function setCorrect(idx, key) {
+            questions[idx].correct = key;
+            renderQuestions();
+        }
+
+        function updateTFItemText(idx, key, text) {
+            questions[idx].items[key].text = text;
+        }
+
+        function updateTFItemCorrect(idx, key, value) {
+            questions[idx].items[key].correct = value === 'true';
+            renderQuestions();
+        }
+
+        function generateUniqueFileName(originalName) {
+            const timestamp = Date.now();
+            const random = Math.random().toString(36).substring(2, 8);
+            const extension = originalName.split('.').pop();
+            const nameWithoutExt = originalName.substring(0, originalName.lastIndexOf('.'));
+            return `${nameWithoutExt}_${timestamp}_${random}.${extension}`;
+        }
+
+        async function addQuestionMedia(idx, event) {
+            const files = Array.from(event.target.files);
+            for (const file of files) {
+                const uniqueName = generateUniqueFileName(file.name);
+                mediaFiles[uniqueName] = file;
+                
+                if (!questions[idx].question.media) {
+                    questions[idx].question.media = [];
+                }
+                questions[idx].question.media.push(uniqueName);
+            }
+            event.target.value = '';
+            renderQuestions();
+        }
+
+        function removeQuestionMedia(idx, mediaIdx) {
+            const fileName = questions[idx].question.media[mediaIdx];
+            delete mediaFiles[fileName];
+            questions[idx].question.media.splice(mediaIdx, 1);
+            renderQuestions();
+        }
+
+        async function addChoiceMedia(idx, key, event) {
+            const files = Array.from(event.target.files);
+            for (const file of files) {
+                const uniqueName = generateUniqueFileName(file.name);
+                mediaFiles[uniqueName] = file;
+                
+                if (!questions[idx].choices[key].media) {
+                    questions[idx].choices[key].media = [];
+                }
+                questions[idx].choices[key].media.push(uniqueName);
+            }
+            event.target.value = '';
+            renderQuestions();
+        }
+
+        function removeChoiceMedia(idx, key, mediaIdx) {
+            const fileName = questions[idx].choices[key].media[mediaIdx];
+            delete mediaFiles[fileName];
+            questions[idx].choices[key].media.splice(mediaIdx, 1);
+            renderQuestions();
+        }
+
+        async function addTFItemMedia(idx, key, event) {
+            const files = Array.from(event.target.files);
+            for (const file of files) {
+                const uniqueName = generateUniqueFileName(file.name);
+                mediaFiles[uniqueName] = file;
+                
+                if (!questions[idx].items[key].media) {
+                    questions[idx].items[key].media = [];
+                }
+                questions[idx].items[key].media.push(uniqueName);
+            }
+            event.target.value = '';
+            renderQuestions();
+        }
+
+        function removeTFItemMedia(idx, key, mediaIdx) {
+            const fileName = questions[idx].items[key].media[mediaIdx];
+            delete mediaFiles[fileName];
+            questions[idx].items[key].media.splice(mediaIdx, 1);
+            renderQuestions();
+        }
+
+        function prepareQuestionsForExport() {
+            return questions.map(q => {
+                const exported = { ...q };
+                
+                if (!exported.question.media) {
+                    exported.question.media = [];
+                }
+                
+                if (exported.question.media.length > 0) {
+                    exported.question.media = exported.question.media.length === 1 
+                        ? exported.question.media[0] 
+                        : exported.question.media;
+                } else {
+                    delete exported.question.media;
+                }
+
+                if (q.type === 'multiple_choice') {
+                    Object.keys(exported.choices).forEach(key => {
+                        if (!exported.choices[key].media) {
+                            exported.choices[key].media = [];
+                        }
+                        
+                        if (exported.choices[key].media.length > 0) {
+                            exported.choices[key].media = exported.choices[key].media.length === 1
+                                ? exported.choices[key].media[0]
+                                : exported.choices[key].media;
+                        } else {
+                            delete exported.choices[key].media;
+                        }
+                    });
+                } else {
+                    Object.keys(exported.items).forEach(key => {
+                        if (!exported.items[key].media) {
+                            exported.items[key].media = [];
+                        }
+                        
+                        if (exported.items[key].media.length > 0) {
+                            exported.items[key].media = exported.items[key].media.length === 1
+                                ? exported.items[key].media[0]
+                                : exported.items[key].media;
+                        } else {
+                            delete exported.items[key].media;
+                        }
+                    });
+                }
+
+                return exported;
+            });
+        }
+
+        async function exportZip() {
+            try {
+                const zip = new JSZip();
+
+                const config = {
+                    metadata: {
+                        title: document.getElementById('title').value,
+                        subject: document.getElementById('subject').value,
+                        grade: document.getElementById('grade').value,
+                        author: document.getElementById('author').value
+                    },
+                    exam: {
+                        description: document.getElementById('description').value,
+                        duration_minutes: parseInt(document.getElementById('duration').value),
+                        start_time: document.getElementById('startTime').value.replace('T', ' '),
+                        end_time: document.getElementById('endTime').value.replace('T', ' '),
+                        shuffle_questions: document.getElementById('shuffleQuestions').checked,
+                        shuffle_answers: document.getElementById('shuffleAnswers').checked
+                    }
+                };
+
+                zip.file('config.yaml', jsyaml.dump(config));
+
+                const questionsData = { questions: prepareQuestionsForExport() };
+                zip.file('questions.yaml', jsyaml.dump(questionsData));
+
+                if (Object.keys(mediaFiles).length > 0) {
+                    const mediaFolder = zip.folder('media');
+                    for (const [fileName, file] of Object.entries(mediaFiles)) {
+                        const arrayBuffer = await file.arrayBuffer();
+                        mediaFolder.file(fileName, arrayBuffer);
+                    }
+                }
+
+                const blob = await zip.generateAsync({ type: 'blob' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'quiz_package.zip';
+                a.click();
+                URL.revokeObjectURL(url);
+            } catch (error) {
+                alert('Lỗi khi xuất ZIP: ' + error.message);
+            }
+        }
+
+        async function importZip(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            try {
+                await loadZipFromBlob(file);
+                renderQuestions();
+                alert('Tải lên thành công!');
+            } catch (error) {
+                alert('Lỗi khi đọc file ZIP: ' + error.message);
+            } finally {
+                event.target.value = '';
+            }
+        }
+
+        async function clearAll() {
+            if (confirm('Bạn có chắc muốn xóa tất cả dữ liệu? Hành động này không thể hoàn tác!')) {
+                questions = [];
+                mediaFiles = {};
+                
+                document.getElementById('title').value = '';
+                document.getElementById('subject').value = '';
+                document.getElementById('grade').value = '';
+                document.getElementById('author').value = '';
+                document.getElementById('description').value = '';
+                document.getElementById('duration').value = 45;
+                
+                const now = new Date();
+                const nextYear = new Date(now.getFullYear() + 1, 11, 31, 23, 59);
+                document.getElementById('startTime').value = now.toISOString().slice(0, 16);
+                document.getElementById('endTime').value = nextYear.toISOString().slice(0, 16);
+                
+                document.getElementById('shuffleQuestions').checked = false;
+                document.getElementById('shuffleAnswers').checked = false;
+                
+                await clearIndexedDB();
+                
+                renderQuestions();
+                alert('Đã xóa tất cả dữ liệu!');
+            }
+        }
+
+        function openPublishModal() {
+            document.getElementById('publishModal').classList.remove('hidden');
+            document.getElementById('publishResult').innerHTML = '';
+            document.getElementById('uploadStatus').classList.add('hidden');
+            turnstileToken = null;
+            publishedLink = null;
+            
+            const publishBtn = document.getElementById('publishBtn');
+            publishBtn.disabled = true;
+            publishBtn.textContent = 'Xuất bản';
+            publishBtn.className = 'flex-1 py-2.5 text-sm font-semibold text-white bg-edu-600 rounded-lg hover:bg-edu-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
+            publishBtn.onclick = publishQuiz;
+            
+            if (window.turnstile) {
+                window.turnstile.reset();
+            }
+        }
+
+        function closePublishModal() {
+            document.getElementById('publishModal').classList.add('hidden');
+        }
+
+        window.onTurnstileSuccess = function(token) {
+            turnstileToken = token;
+            document.getElementById('publishBtn').disabled = false;
+        };
+
+        async function publishQuiz() {
+            if (!turnstileToken) {
+                alert('Vui lòng xác thực Turnstile');
+                return;
+            }
+
+            const publishBtn = document.getElementById('publishBtn');
+            const loading = document.getElementById('publishLoading');
+            const resultBox = document.getElementById('publishResult');
+            const uploadStatus = document.getElementById('uploadStatus');
+
+            publishBtn.disabled = true;
+            loading.classList.remove('hidden');
+            resultBox.innerHTML = '';
+            uploadStatus.classList.remove('hidden');
+
+            try {
+                const zip = new JSZip();
+
+                const config = {
+                    metadata: {
+                        title: document.getElementById('title').value,
+                        subject: document.getElementById('subject').value,
+                        grade: document.getElementById('grade').value,
+                        author: document.getElementById('author').value
+                    },
+                    exam: {
+                        description: document.getElementById('description').value,
+                        duration_minutes: parseInt(document.getElementById('duration').value),
+                        start_time: document.getElementById('startTime').value.replace('T', ' '),
+                        end_time: document.getElementById('endTime').value.replace('T', ' '),
+                        shuffle_questions: document.getElementById('shuffleQuestions').checked,
+                        shuffle_answers: document.getElementById('shuffleAnswers').checked
+                    }
+                };
+
+                zip.file('config.yaml', jsyaml.dump(config));
+
+                const questionsData = { questions: prepareQuestionsForExport() };
+                zip.file('questions.yaml', jsyaml.dump(questionsData));
+
+                if (Object.keys(mediaFiles).length > 0) {
+                    const mediaFolder = zip.folder('media');
+                    for (const [fileName, file] of Object.entries(mediaFiles)) {
+                        const arrayBuffer = await file.arrayBuffer();
+                        mediaFolder.file(fileName, arrayBuffer);
+                    }
+                }
+
+                const blob = await zip.generateAsync({ type: 'blob' });
+                const zipFile = new File([blob], 'quiz_package.zip', { type: 'application/zip' });
+
+                const formData = new FormData();
+                formData.append('file', zipFile);
+                formData.append('turnstileToken', turnstileToken);
+
+                const response = await fetch(CONFIG.edgeFunctionUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${CONFIG.supabaseAnonKey}`,
+                        'apikey': CONFIG.supabaseAnonKey
+                    },
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    const currentDomain = window.location.origin;
+                    publishedLink = `${currentDomain}/quizly?r=${encodeURIComponent(result.publicUrl)}`;
+                    
+                    resultBox.innerHTML = `
+                        <div class="bg-green-50 border border-green-200 rounded-xl p-4">
+                            <div class="flex items-center gap-2 mb-3">
+                                <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <h4 class="font-semibold text-green-800">Xuất bản thành công!</h4>
+                            </div>
+                            <p class="text-xs text-slate-600 mb-3">File ID: ${result.fileId}</p>
+                            <div class="flex gap-2">
+                                <input type="text" id="quizLinkInput" value="${publishedLink}" readonly class="flex-1 px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white font-mono">
+                                <button onclick="copyLinkToClipboard()" class="px-4 py-2 text-xs font-semibold text-white bg-edu-600 rounded-lg hover:bg-edu-700">
+                                    Copy
+                                </button>
+                            </div>
+                            <a href="${publishedLink}" target="_blank" class="inline-block mt-3 text-xs text-edu-600 hover:underline">Mở link trong tab mới →</a>
+                        </div>
+                    `;
+                    
+                    publishBtn.textContent = '📋 Copy link';
+                    publishBtn.className = 'flex-1 py-2.5 text-sm font-semibold text-white bg-edu-600 rounded-lg hover:bg-edu-700 transition-colors';
+                    publishBtn.onclick = copyLinkToClipboard;
+                    publishBtn.disabled = false;
+                } else {
+                    resultBox.innerHTML = `
+                        <div class="bg-red-50 border border-red-200 rounded-xl p-4">
+                            <div class="flex items-center gap-2">
+                                <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <span class="text-sm text-red-800">${result.error}</span>
+                            </div>
+                        </div>
+                    `;
+                    
+                    publishBtn.textContent = 'Xuất bản';
+                    publishBtn.className = 'flex-1 py-2.5 text-sm font-semibold text-white bg-edu-600 rounded-lg hover:bg-edu-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
+                    publishBtn.onclick = publishQuiz;
+                    publishBtn.disabled = false;
+                }
+            } catch (error) {
+                resultBox.innerHTML = `
+                    <div class="bg-red-50 border border-red-200 rounded-xl p-4">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <span class="text-sm text-red-800">${error.message}</span>
+                        </div>
+                    </div>
+                `;
+                
+                publishBtn.textContent = 'Xuất bản';
+                publishBtn.className = 'flex-1 py-2.5 text-sm font-semibold text-white bg-edu-600 rounded-lg hover:bg-edu-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
+                publishBtn.onclick = publishQuiz;
+                publishBtn.disabled = false;
+            } finally {
+                loading.classList.add('hidden');
+                uploadStatus.classList.add('hidden');
+            }
+        }
+
+        function copyLinkToClipboard() {
+            if (!publishedLink) return;
+            
+            const input = document.getElementById('quizLinkInput');
+            if (input) {
+                input.select();
+                input.setSelectionRange(0, 99999);
+                
+                try {
+                    navigator.clipboard.writeText(publishedLink).then(() => {
+                        const publishBtn = document.getElementById('publishBtn');
+                        const originalText = publishBtn.textContent;
+                        publishBtn.textContent = '✅ Đã copy!';
+                        publishBtn.disabled = true;
+                        
+                        setTimeout(() => {
+                            publishBtn.textContent = originalText;
+                            publishBtn.disabled = false;
+                        }, 2000);
+                    });
+                } catch (err) {
+                    document.execCommand('copy');
+                    const publishBtn = document.getElementById('publishBtn');
+                    const originalText = publishBtn.textContent;
+                    publishBtn.textContent = '✅ Đã copy!';
+                    publishBtn.disabled = true;
+                    
+                    setTimeout(() => {
+                        publishBtn.textContent = originalText;
+                        publishBtn.disabled = false;
+                    }, 2000);
+                }
+            }
+        }
+
+        // Initialize on page load
+        init();
+    </script>
+</body>
+</html>

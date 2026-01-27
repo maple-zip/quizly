@@ -234,6 +234,33 @@
         </section>
     </main>
 
+    <!-- Custom Confirm Modal -->
+    <div id="confirmModal" class="hidden fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-sm transform transition-all">
+            <div class="p-6">
+                <div class="flex items-center gap-3 mb-4">
+                    <div id="confirmIconContainer" class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                        <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 id="confirmTitle" class="text-lg font-semibold text-slate-800">Xác nhận</h3>
+                        <p id="confirmMessage" class="text-sm text-slate-600">Bạn có chắc chắn muốn thực hiện hành động này?</p>
+                    </div>
+                </div>
+            </div>
+            <div class="flex gap-3 p-4 pt-0">
+                <button id="confirmCancelBtn" class="flex-1 py-2.5 text-sm font-medium text-slate-700 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors">
+                    Hủy
+                </button>
+                <button id="confirmOkBtn" class="flex-1 py-2.5 text-sm font-semibold text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors">
+                    Xóa
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Publish Modal -->
     <div id="publishModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
@@ -301,6 +328,71 @@
         let mediaFiles = {};
         let turnstileToken = null;
         let publishedLink = null;
+
+        // Custom Confirm Dialog
+        function showConfirmDialog({ title, message, confirmText = 'Xác nhận', onConfirm }) {
+            const modal = document.getElementById('confirmModal');
+            const titleEl = document.getElementById('confirmTitle');
+            const messageEl = document.getElementById('confirmMessage');
+            const okBtn = document.getElementById('confirmOkBtn');
+            const cancelBtn = document.getElementById('confirmCancelBtn');
+
+            titleEl.textContent = title || 'Xác nhận';
+            messageEl.textContent = message || 'Bạn có chắc chắn muốn thực hiện hành động này?';
+            okBtn.textContent = confirmText;
+
+            modal.classList.remove('hidden');
+
+            const handleConfirm = () => {
+                modal.classList.add('hidden');
+                cleanup();
+                if (onConfirm) onConfirm();
+            };
+
+            const handleCancel = () => {
+                modal.classList.add('hidden');
+                cleanup();
+            };
+
+            const cleanup = () => {
+                okBtn.removeEventListener('click', handleConfirm);
+                cancelBtn.removeEventListener('click', handleCancel);
+            };
+
+            okBtn.addEventListener('click', handleConfirm);
+            cancelBtn.addEventListener('click', handleCancel);
+        }
+
+        // Custom Notification Toast
+        function showNotification(message, type = 'info') {
+            const existingToast = document.querySelector('.custom-toast');
+            if (existingToast) existingToast.remove();
+
+            const colors = {
+                success: 'bg-green-600',
+                error: 'bg-red-600',
+                info: 'bg-edu-600',
+                warning: 'bg-yellow-500'
+            };
+
+            const toast = document.createElement('div');
+            toast.className = `custom-toast fixed bottom-4 right-4 ${colors[type] || colors.info} text-white px-4 py-3 rounded-lg shadow-lg z-[70] flex items-center gap-2 text-sm font-medium`;
+            toast.innerHTML = `
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    ${type === 'success' ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>' : 
+                      type === 'error' ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>' :
+                      '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>'}
+                </svg>
+                <span>${message}</span>
+            `;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
 
         // IndexedDB functions
         function openDB() {
@@ -764,36 +856,41 @@
         }
 
         function deleteQuestion(idx) {
-            if (confirm('Xóa câu hỏi này?')) {
-                const question = questions[idx];
-                
-                if (question.question.media) {
-                    question.question.media.forEach(fileName => {
-                        delete mediaFiles[fileName];
-                    });
+            showConfirmDialog({
+                title: 'Xóa câu hỏi',
+                message: 'Bạn có chắc muốn xóa câu hỏi này?',
+                confirmText: 'Xóa',
+                onConfirm: () => {
+                    const question = questions[idx];
+                    
+                    if (question.question.media) {
+                        question.question.media.forEach(fileName => {
+                            delete mediaFiles[fileName];
+                        });
+                    }
+                    
+                    if (question.type === 'multiple_choice' && question.choices) {
+                        Object.values(question.choices).forEach(choice => {
+                            if (choice.media) {
+                                choice.media.forEach(fileName => {
+                                    delete mediaFiles[fileName];
+                                });
+                            }
+                        });
+                    } else if (question.type === 'true_false_group' && question.items) {
+                        Object.values(question.items).forEach(item => {
+                            if (item.media) {
+                                item.media.forEach(fileName => {
+                                    delete mediaFiles[fileName];
+                                });
+                            }
+                        });
+                    }
+                    
+                    questions.splice(idx, 1);
+                    renderQuestions();
                 }
-                
-                if (question.type === 'multiple_choice' && question.choices) {
-                    Object.values(question.choices).forEach(choice => {
-                        if (choice.media) {
-                            choice.media.forEach(fileName => {
-                                delete mediaFiles[fileName];
-                            });
-                        }
-                    });
-                } else if (question.type === 'true_false_group' && question.items) {
-                    Object.values(question.items).forEach(item => {
-                        if (item.media) {
-                            item.media.forEach(fileName => {
-                                delete mediaFiles[fileName];
-                            });
-                        }
-                    });
-                }
-                
-                questions.splice(idx, 1);
-                renderQuestions();
-            }
+            });
         }
 
         function updateQuestionText(idx, text) {
@@ -984,7 +1081,7 @@
                 a.click();
                 URL.revokeObjectURL(url);
             } catch (error) {
-                alert('Lỗi khi xuất ZIP: ' + error.message);
+                showNotification('Lỗi khi xuất ZIP: ' + error.message, 'error');
             }
         }
 
@@ -995,39 +1092,44 @@
             try {
                 await loadZipFromBlob(file);
                 renderQuestions();
-                alert('Tải lên thành công!');
+                showNotification('Tải lên thành công!', 'success');
             } catch (error) {
-                alert('Lỗi khi đọc file ZIP: ' + error.message);
+                showNotification('Lỗi khi đọc file ZIP: ' + error.message, 'error');
             } finally {
                 event.target.value = '';
             }
         }
 
         async function clearAll() {
-            if (confirm('Bạn có chắc muốn xóa tất cả dữ liệu? Hành động này không thể hoàn tác!')) {
-                questions = [];
-                mediaFiles = {};
-                
-                document.getElementById('title').value = '';
-                document.getElementById('subject').value = '';
-                document.getElementById('grade').value = '';
-                document.getElementById('author').value = '';
-                document.getElementById('description').value = '';
-                document.getElementById('duration').value = 45;
-                
-                const now = new Date();
-                const nextYear = new Date(now.getFullYear() + 1, 11, 31, 23, 59);
-                document.getElementById('startTime').value = now.toISOString().slice(0, 16);
-                document.getElementById('endTime').value = nextYear.toISOString().slice(0, 16);
-                
-                document.getElementById('shuffleQuestions').checked = false;
-                document.getElementById('shuffleAnswers').checked = false;
-                
-                await clearIndexedDB();
-                
-                renderQuestions();
-                alert('Đã xóa tất cả dữ liệu!');
-            }
+            showConfirmDialog({
+                title: 'Xóa tất cả',
+                message: 'Bạn có chắc muốn xóa tất cả dữ liệu? Hành động này không thể hoàn tác!',
+                confirmText: 'Xóa tất cả',
+                onConfirm: async () => {
+                    questions = [];
+                    mediaFiles = {};
+                    
+                    document.getElementById('title').value = '';
+                    document.getElementById('subject').value = '';
+                    document.getElementById('grade').value = '';
+                    document.getElementById('author').value = '';
+                    document.getElementById('description').value = '';
+                    document.getElementById('duration').value = 45;
+                    
+                    const now = new Date();
+                    const nextYear = new Date(now.getFullYear() + 1, 11, 31, 23, 59);
+                    document.getElementById('startTime').value = now.toISOString().slice(0, 16);
+                    document.getElementById('endTime').value = nextYear.toISOString().slice(0, 16);
+                    
+                    document.getElementById('shuffleQuestions').checked = false;
+                    document.getElementById('shuffleAnswers').checked = false;
+                    
+                    await clearIndexedDB();
+                    
+                    renderQuestions();
+                    showNotification('Đã xóa tất cả dữ liệu!', 'success');
+                }
+            });
         }
 
         function openPublishModal() {
@@ -1059,7 +1161,7 @@
 
         async function publishQuiz() {
             if (!turnstileToken) {
-                alert('Vui lòng xác thực Turnstile');
+                showNotification('Vui lòng xác thực Turnstile', 'warning');
                 return;
             }
 

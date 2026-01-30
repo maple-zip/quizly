@@ -4,53 +4,204 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DOCX → Quizly ZIP</title>
+<meta name="description" content="Chuyển đổi file DOCX thành bài quiz Quizly">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        edu: {
+          50: '#f0f9ff',
+          100: '#e0f2fe',
+          200: '#bae6fd',
+          300: '#7dd3fc',
+          400: '#38bdf8',
+          500: '#0ea5e9',
+          600: '#0284c7',
+          700: '#0369a1',
+          800: '#075985',
+          900: '#0c4a6e',
+          950: '#082f49'
+        }
+      }
+    }
+  }
+}
+</script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+  body { font-family: 'Inter', sans-serif; }
+  .drop-zone-active { 
+    border-color: #0284c7 !important; 
+    background-color: #f0f9ff !important;
+    transform: scale(1.01);
+  }
+  .gradient-bg {
+    background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 50%, #0c4a6e 100%);
+  }
+  .card-shadow {
+    box-shadow: 0 4px 6px -1px rgb(14 165 233 / 0.1), 0 2px 4px -2px rgb(14 165 233 / 0.1);
+  }
+  .card-shadow-lg {
+    box-shadow: 0 10px 15px -3px rgb(14 165 233 / 0.1), 0 4px 6px -4px rgb(14 165 233 / 0.1);
+  }
+</style>
 </head>
-<body class="bg-gradient-to-br from-emerald-50 to-teal-50 min-h-screen p-6">
+<body class="bg-gradient-to-br from-slate-50 via-edu-50/30 to-white min-h-screen">
 
-<div class="max-w-2xl mx-auto">
-  <div class="bg-white rounded-2xl shadow-xl p-8 mb-6">
-    <h1 class="text-3xl font-bold text-emerald-800 mb-2">DOCX → Quizly</h1>
-    <p class="text-gray-600 mb-6">Tải lên file DOCX để chuyển đổi thành bài quiz và chỉnh sửa</p>
-    
-    <div class="space-y-4">
-      <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mb-4">
-        <label class="flex items-start cursor-pointer">
-          <input type="checkbox" id="autoDistributeImages" checked class="mt-1 w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500">
-          <div class="ml-3">
-            <span class="text-sm font-semibold text-emerald-900">Tự động phân bố ảnh</span>
-            <p class="text-xs text-emerald-700 mt-1">Nếu câu hỏi trắc nghiệm có đúng 4 ảnh, tự động gán mỗi ảnh cho A, B, C, D (bỏ qua vị trí ban đầu)</p>
+<!-- Header -->
+<header class="bg-white/90 backdrop-blur-md border-b border-edu-100/50 sticky top-0 z-50">
+  <div class="max-w-4xl mx-auto px-6 py-4">
+    <div class="flex items-center gap-4">
+      <div class="w-12 h-12 gradient-bg rounded-2xl flex items-center justify-center shadow-lg shadow-edu-500/30 transform hover:scale-105 transition-transform">
+        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+        </svg>
+      </div>
+      <div>
+        <h1 class="text-2xl font-extrabold bg-gradient-to-r from-edu-600 to-edu-800 bg-clip-text text-transparent">Quizly Converter</h1>
+        <p class="text-sm text-edu-600 font-medium">DOCX → Quiz Format</p>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="max-w-2xl mx-auto px-6 py-12">
+  <!-- Main Card -->
+  <div class="bg-white rounded-3xl card-shadow-lg border border-edu-100/50 overflow-hidden">
+    <!-- Card Header -->
+    <div class="gradient-bg px-8 py-8">
+      <h2 class="text-3xl font-extrabold text-white">Chuyển đổi DOCX</h2>
+      <p class="text-edu-100 mt-2 text-lg">Tải lên file Word để tạo bài quiz tự động</p>
+    </div>
+
+    <!-- Card Body -->
+    <div class="p-8 space-y-6">
+      <!-- Option -->
+      <div class="bg-gradient-to-r from-edu-50 to-blue-50 border border-edu-200/50 rounded-2xl p-5">
+        <label class="flex items-start cursor-pointer group">
+          <input type="checkbox" id="autoDistributeImages" checked 
+                 class="mt-1 w-5 h-5 text-edu-600 border-edu-300 rounded-lg focus:ring-edu-500 focus:ring-offset-0 cursor-pointer">
+          <div class="ml-4">
+            <span class="text-base font-bold text-edu-900 group-hover:text-edu-700 transition-colors">
+              Tự động phân bố ảnh cho lựa chọn
+            </span>
+            <p class="text-sm text-edu-600 mt-1.5 leading-relaxed">
+              Nếu câu hỏi trắc nghiệm có đúng 4 ảnh, tự động gán mỗi ảnh cho A, B, C, D
+            </p>
           </div>
         </label>
       </div>
-      
-      <div class="border-2 border-dashed border-emerald-300 rounded-xl p-8 text-center hover:border-emerald-500 transition">
+
+      <!-- Drop Zone -->
+      <div id="dropZone" class="border-3 border-dashed border-edu-300 rounded-3xl p-12 text-center hover:border-edu-500 hover:bg-edu-50/50 transition-all duration-300 cursor-pointer group">
         <input type="file" id="docxInput" accept=".docx" class="hidden" onchange="handleFileUpload(this)">
-        <label for="docxInput" class="cursor-pointer">
-          <div class="text-emerald-600 mb-2">
-            <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+        <label for="docxInput" class="cursor-pointer block">
+          <div class="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-edu-100 to-edu-200 rounded-3xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+            <svg class="w-12 h-12 text-edu-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
             </svg>
           </div>
-          <p class="text-lg font-semibold text-gray-700">Nhấn để chọn file DOCX</p>
-          <p class="text-sm text-gray-500 mt-1">Hoặc kéo thả file vào đây</p>
+          <p class="text-xl font-bold text-edu-800">Nhấn để chọn file DOCX</p>
+          <p class="text-base text-edu-500 mt-3">hoặc kéo thả file vào đây</p>
+          <div class="mt-6 inline-flex items-center gap-2 bg-edu-100 text-edu-700 text-sm font-medium px-4 py-2 rounded-full">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            Hỗ trợ: .docx (Microsoft Word)
+          </div>
         </label>
       </div>
     </div>
   </div>
 
-  <div id="statusBox" class="hidden bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg">
-    <div class="flex items-center">
-      <svg class="animate-spin h-5 w-5 text-blue-600 mr-3" fill="none" viewBox="0 0 24 24">
-        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-      </svg>
-      <p id="statusText" class="text-blue-800 font-medium"></p>
+  <!-- Status Box -->
+  <div id="statusBox" class="hidden mt-8 bg-white border border-edu-200 rounded-2xl p-6 card-shadow-lg">
+    <div class="flex items-center gap-5">
+      <div class="w-14 h-14 bg-gradient-to-br from-edu-100 to-edu-200 rounded-2xl flex items-center justify-center flex-shrink-0">
+        <svg class="animate-spin h-7 w-7 text-edu-600" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+      </div>
+      <div class="flex-1">
+        <p id="statusText" class="text-edu-800 font-bold text-lg"></p>
+        <div class="mt-3 w-full bg-edu-100 rounded-full h-2.5 overflow-hidden">
+          <div id="progressBar" class="gradient-bg h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+        </div>
+      </div>
     </div>
   </div>
-</div>
+
+  <!-- Info Section -->
+  <div class="mt-10 grid grid-cols-1 md:grid-cols-2 gap-5">
+    <div class="bg-white rounded-2xl p-6 border border-edu-100/50 card-shadow hover:shadow-lg transition-shadow">
+      <div class="flex items-center gap-4 mb-4">
+        <div class="w-12 h-12 bg-gradient-to-br from-emerald-100 to-emerald-200 rounded-xl flex items-center justify-center">
+          <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+          </svg>
+        </div>
+        <h3 class="font-bold text-lg text-slate-900">Trắc nghiệm ABCD</h3>
+      </div>
+      <p class="text-sm text-slate-600 leading-relaxed">
+        Phát hiện bằng lựa chọn viết <span class="font-bold text-emerald-600">HOA</span>
+      </p>
+      <div class="mt-3 flex flex-wrap gap-2">
+        <code class="bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-lg text-sm font-mono font-bold">A.</code>
+        <code class="bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-lg text-sm font-mono font-bold">B.</code>
+        <code class="bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-lg text-sm font-mono font-bold">C.</code>
+        <code class="bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-lg text-sm font-mono font-bold">D.</code>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-2xl p-6 border border-edu-100/50 card-shadow hover:shadow-lg transition-shadow">
+      <div class="flex items-center gap-4 mb-4">
+        <div class="w-12 h-12 bg-gradient-to-br from-amber-100 to-amber-200 rounded-xl flex items-center justify-center">
+          <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+          </svg>
+        </div>
+        <h3 class="font-bold text-lg text-slate-900">Trắc nghiệm Đúng/Sai</h3>
+      </div>
+      <p class="text-sm text-slate-600 leading-relaxed">
+        Phát hiện bằng lựa chọn viết <span class="font-bold text-amber-600">thường</span>
+      </p>
+      <div class="mt-3 flex flex-wrap gap-2">
+        <code class="bg-amber-100 text-amber-700 px-3 py-1.5 rounded-lg text-sm font-mono font-bold">a.</code>
+        <code class="bg-amber-100 text-amber-700 px-3 py-1.5 rounded-lg text-sm font-mono font-bold">b)</code>
+        <code class="bg-amber-100 text-amber-700 px-3 py-1.5 rounded-lg text-sm font-mono font-bold">c.</code>
+        <code class="bg-amber-100 text-amber-700 px-3 py-1.5 rounded-lg text-sm font-mono font-bold">d)</code>
+      </div>
+    </div>
+  </div>
+
+  <!-- Algorithm Info -->
+  <div class="mt-8 bg-gradient-to-r from-slate-50 to-edu-50 rounded-2xl p-6 border border-edu-100/50">
+    <div class="flex items-start gap-4">
+      <div class="w-10 h-10 bg-edu-100 rounded-xl flex items-center justify-center flex-shrink-0">
+        <svg class="w-5 h-5 text-edu-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+      </div>
+      <div>
+        <h4 class="font-bold text-slate-800">Thuật toán Parse Ngược</h4>
+        <p class="text-sm text-slate-600 mt-2 leading-relaxed">
+          Hệ thống quét từ <span class="font-semibold text-edu-700">cuối câu hỏi lên</span> để phát hiện loại lựa chọn, 
+          giúp xử lý chính xác các câu hỏi phức tạp có phát biểu con (a, b, c, d) kèm đáp án (A, B, C, D).
+        </p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Footer -->
+<footer class="mt-auto py-8 text-center">
+  <p class="text-sm text-slate-400 font-medium">Quizly Converter &bull; Tạo bài quiz dễ dàng từ file Word</p>
+</footer>
 
 <script>
 const DB_NAME = 'quizly_zip_storage';
@@ -87,10 +238,12 @@ async function saveZipToIndexedDB(zipBlob) {
   });
 }
 
-function showStatus(msg) {
+function showStatus(msg, progress = 0) {
   const box = document.getElementById('statusBox');
   const text = document.getElementById('statusText');
+  const progressBar = document.getElementById('progressBar');
   text.textContent = msg;
+  progressBar.style.width = progress + '%';
   box.classList.remove('hidden');
 }
 
@@ -99,25 +252,25 @@ async function handleFileUpload(input) {
   if (!file) return;
 
   try {
-    showStatus('Đang đọc file DOCX...');
+    showStatus('Đang đọc file DOCX...', 10);
     const arrayBuffer = await file.arrayBuffer();
     
-    showStatus('Đang chuyển đổi sang HTML...');
+    showStatus('Đang chuyển đổi sang HTML...', 30);
     const result = await mammoth.convertToHtml({ arrayBuffer });
     const html = result.value;
 
-    showStatus('Đang phân tích câu hỏi...');
+    showStatus('Đang phân tích câu hỏi...', 50);
     const autoDistribute = document.getElementById('autoDistributeImages').checked;
     const parsedData = await parseHTMLString(html, autoDistribute);
 
-    showStatus('Đang tạo file ZIP...');
+    showStatus('Đang tạo file ZIP...', 70);
     const zip = await createQuizZip(parsedData);
     const zipBlob = await zip.generateAsync({ type: 'blob' });
 
-    showStatus('Đang lưu vào bộ nhớ...');
+    showStatus('Đang lưu vào bộ nhớ...', 90);
     await saveZipToIndexedDB(zipBlob);
 
-    showStatus('Hoàn tất! Đang chuyển hướng...');
+    showStatus('Hoàn tất! Đang chuyển hướng...', 100);
     
     // Redirect to editor
     setTimeout(() => {
@@ -213,9 +366,14 @@ function toYAML(obj) {
   return lines.join('\n');
 }
 
+// =====================================================
+// PARSE NGƯỢC - PHÁT HIỆN LOẠI CÂU HỎI BẰNG FORMAT LỰA CHỌN
+// Quét từ cuối lên để xác định chính xác loại câu hỏi
+// =====================================================
 async function parseHTMLString(htmlText, autoDistributeImages = true) {
   const doc = new DOMParser().parseFromString(htmlText, 'text/html');
 
+  // === Xử lý ảnh (giữ nguyên cấu trúc Mammoth.js) ===
   const imgEls = Array.from(doc.querySelectorAll('img'));
   const dataImgs = imgEls.filter(i => i.src && i.src.startsWith('data:'));
   const mediaFiles = new Map();
@@ -235,274 +393,329 @@ async function parseHTMLString(htmlText, autoDistributeImages = true) {
   }
 
   const bodyNodes = Array.from(doc.body.childNodes);
-  let mode = 'mc';
   const questions = [];
-  let i = 0;
   
-  while (i < bodyNodes.length) {
-    const node = bodyNodes[i];
-    const text = (node.textContent || '').trim();
-    const lower = text.toLowerCase();
-    
-    if (lower.includes('đúng sai') || lower.includes('tn đúng sai') || lower.includes('câu hỏi tn')) {
-      mode = 'tf';
-      i++;
-      continue;
+  // Regex phát hiện câu hỏi lớn: "Câu 1", "Câu 1:", "1.", "Câu 2:" etc.
+  const questionStartRegex = /^\s*(câu\s*\d+|^\d+\.)[:.]?\s*/i;
+  
+  // Helper: lấy ảnh từ một node
+  function getMediaFromNode(n) {
+    const names = [];
+    if (n.nodeType === 1 && n.tagName === 'IMG') {
+      const name = n.getAttribute('data-indexeddb-name');
+      if (name) names.push(name);
     }
+    if (n.querySelectorAll) {
+      for (const im of Array.from(n.querySelectorAll('img'))) {
+        const nm = im.getAttribute('data-indexeddb-name');
+        if (nm) names.push(nm);
+      }
+    }
+    return names;
+  }
 
-    const isQStart = /^\s*(câu\s*\d+|\d+\.|câu\s*\d+[:.])/i.test(text);
+  // Tìm tất cả các vị trí bắt đầu câu hỏi
+  const questionStarts = [];
+  for (let i = 0; i < bodyNodes.length; i++) {
+    const text = (bodyNodes[i].textContent || '').trim();
+    if (questionStartRegex.test(text)) {
+      questionStarts.push(i);
+    }
+  }
+
+  // Duyệt qua từng câu hỏi
+  for (let qIdx = 0; qIdx < questionStarts.length; qIdx++) {
+    const startIdx = questionStarts[qIdx];
+    const endIdx = qIdx + 1 < questionStarts.length ? questionStarts[qIdx + 1] : bodyNodes.length;
     
-    if (isQStart) {
-      const blockNodes = [node];
-      let j = i + 1;
-      
-      while (j < bodyNodes.length) {
-        const t = (bodyNodes[j].textContent || '').trim();
-        if (/^(câu\s*\d+|\d+\.|câu\s*\d+[:.])/i.test(t)) break;
-        if ((t.toLowerCase().includes('đúng sai') || t.toLowerCase().includes('ii.'))) break;
-        if (/^\s*[ivx]+\b\s*\./i.test(t)) break;
-        blockNodes.push(bodyNodes[j]);
-        j++;
+    const blockNodes = bodyNodes.slice(startIdx, endIdx);
+    const blockText = blockNodes.map(n => n.textContent).join('\n').trim();
+    
+    // =====================================================
+    // PARSE NGƯỢC: Quét từ cuối block lên để phát hiện loại câu hỏi
+    // A. B. C. D. → Trắc nghiệm ABCD thông thường
+    // a. b. c. d. hoặc a) b) c) d) → Trắc nghiệm đúng sai
+    // =====================================================
+    
+    const normalized = blockText.replace(/\r/g, '').replace(/\t/g, ' ');
+    
+    // Tìm tất cả vị trí của lựa chọn ABCD viết HOA
+    const upperChoiceMatches = [];
+    const upperRegex = /(?:^|[\s\n])([A-D])\.\s*\S/gm;
+    let match;
+    while ((match = upperRegex.exec(normalized)) !== null) {
+      upperChoiceMatches.push({ letter: match[1], index: match.index });
+    }
+    
+    // Tìm tất cả vị trí của lựa chọn abcd viết thường
+    const lowerChoiceMatches = [];
+    const lowerRegex = /(?:^|[\s\n])([a-d])[.)]\s*\S/gm;
+    while ((match = lowerRegex.exec(normalized)) !== null) {
+      lowerChoiceMatches.push({ letter: match[1], index: match.index });
+    }
+    
+    // =====================================================
+    // LOGIC PARSE NGƯỢC:
+    // 1. Nếu CHỈ có A.B.C.D. → multiple_choice
+    // 2. Nếu CHỈ có a.b.c.d. → true_false_group  
+    // 3. Nếu CÓ CẢ HAI:
+    //    - Nếu A.B.C.D. xuất hiện SAU a.b.c.d. → true_false_group
+    //      (vì a.b.c.d là phát biểu, A.B.C.D là đáp án cuối)
+    //    - Ngược lại → multiple_choice
+    // =====================================================
+    
+    let questionType = 'unknown';
+    
+    const lastUpperIdx = upperChoiceMatches.length > 0 
+      ? Math.max(...upperChoiceMatches.map(m => m.index)) 
+      : -1;
+    const lastLowerIdx = lowerChoiceMatches.length > 0 
+      ? Math.max(...lowerChoiceMatches.map(m => m.index)) 
+      : -1;
+    const firstLowerIdx = lowerChoiceMatches.length > 0
+      ? Math.min(...lowerChoiceMatches.map(m => m.index))
+      : -1;
+    
+    if (lowerChoiceMatches.length >= 2 && upperChoiceMatches.length >= 1) {
+      // Có cả hai loại → kiểm tra thứ tự
+      // Nếu ABCD xuất hiện SAU phần abcd → true_false_group
+      // Pattern: "a) ... b) ... c) ... d) ... A. 1 B. 2 C. 3 D. 4"
+      if (lastUpperIdx > lastLowerIdx) {
+        questionType = 'true_false_group';
+      } else if (lastUpperIdx < firstLowerIdx) {
+        // ABCD trước abcd → có thể là multiple_choice với text chứa abcd
+        questionType = 'multiple_choice';
+      } else {
+        // Phức tạp hơn → mặc định là true_false_group nếu có đủ abcd
+        questionType = 'true_false_group';
       }
-      i = j;
+    } else if (lowerChoiceMatches.length >= 2) {
+      // Chỉ có abcd → true_false_group
+      questionType = 'true_false_group';
+    } else if (upperChoiceMatches.length >= 2) {
+      // Chỉ có ABCD → multiple_choice
+      questionType = 'multiple_choice';
+    }
+    
+    if (questionType === 'multiple_choice') {
+      // =====================================================
+      // PARSE CHO TRẮC NGHIỆM ABCD
+      // =====================================================
       
-      const blockText = blockNodes.map(n => n.textContent).join('\n').trim();
-
-      // Helper: lấy ảnh từ một node
-      function getMediaFromNode(n) {
-        const names = [];
-        // Node tự nó là <img>
-        if (n.nodeType === 1 && n.tagName === 'IMG') {
-          const name = n.getAttribute('data-indexeddb-name');
-          if (name) names.push(name);
-        }
-        // <img> bên trong node
-        if (n.querySelectorAll) {
-          for (const im of Array.from(n.querySelectorAll('img'))) {
-            const nm = im.getAttribute('data-indexeddb-name');
-            if (nm) names.push(nm);
-          }
-        }
-        return names;
-      }
-
-      let norm = blockText.replace(/\r/g, '').replace(/\t/g, ' ');
-      norm = norm.replace(/\s*A\./g, '\nA.').replace(/\s*B\./g, '\nB.').replace(/\s*C\./g, '\nC.').replace(/\s*D\./g, '\nD.');
+      // Chuẩn hóa: đặt mỗi lựa chọn trên dòng riêng
+      let norm = normalized
+        .replace(/(?:^|[\s])A\./gm, '\nA.')
+        .replace(/(?:^|[\s])B\./gm, '\nB.')
+        .replace(/(?:^|[\s])C\./gm, '\nC.')
+        .replace(/(?:^|[\s])D\./gm, '\nD.');
       const lines = norm.split('\n').map(s => s.trim()).filter(Boolean);
       
-      const choiceLines = lines.filter(l => /^[A-D]\./.test(l));
-
-      if (choiceLines.length >= 2 && mode === 'mc') {
-        // Tìm node chứa lựa chọn A. đầu tiên
-        let firstChoiceNodeIndex = -1;
-        for (let idx = 0; idx < blockNodes.length; idx++) {
-          const txt = (blockNodes[idx].textContent || '').trim();
-          if (/A\./i.test(txt)) {
-            firstChoiceNodeIndex = idx;
-            break;
-          }
-        }
-
-        // Ảnh của câu hỏi: chỉ lấy từ các node TRƯỚC lựa chọn A.
-        const questionMediaNames = [];
-        const endIdx = firstChoiceNodeIndex >= 0 ? firstChoiceNodeIndex : blockNodes.length;
-        for (let idx = 0; idx < endIdx; idx++) {
-          questionMediaNames.push(...getMediaFromNode(blockNodes[idx]));
-        }
-
-        let qtextLines = [];
-        for (const l of lines) {
-          if (/^[A-D]\./.test(l)) break;
-          qtextLines.push(l);
-        }
-        const qtext = qtextLines.join(' ').replace(/^(câu\s*\d+[:.]?)/i, '').trim();
-        
-        // Xây dựng choices với text
-        const choices = {};
-        const map = {};
-        for (const l of choiceLines) {
-          const m = l.match(/^([A-D])\.\s*(.*)$/);
-          if (m) map[m[1]] = m[2].trim();
-        }
-        ['A', 'B', 'C', 'D'].forEach(k => {
-          choices[k] = { text: map[k] || '' };
-        });
-
-        // Gán ảnh cho từng lựa chọn
-        if (firstChoiceNodeIndex >= 0) {
-          let currentChoice = null;
-          for (let idx = firstChoiceNodeIndex; idx < blockNodes.length; idx++) {
-            const n = blockNodes[idx];
-            const txt = (n.textContent || '').trim();
-            const choiceMatch = txt.match(/^([A-D])\./);
-            
-            if (choiceMatch) {
-              currentChoice = choiceMatch[1];
-            } else if (currentChoice) {
-              // Node này không phải lựa chọn mới → ảnh thuộc lựa chọn hiện tại
-              const media = getMediaFromNode(n);
-              if (media.length > 0) {
-                if (!choices[currentChoice].media) choices[currentChoice].media = [];
-                if (!Array.isArray(choices[currentChoice].media)) {
-                  choices[currentChoice].media = [choices[currentChoice].media];
-                }
-                choices[currentChoice].media.push(...media);
-              }
-            }
-          }
-        }
-
-        // Chuẩn hóa media của choices (đơn giản hóa nếu chỉ 1 ảnh)
-        for (const k of ['A', 'B', 'C', 'D']) {
-          if (choices[k].media && Array.isArray(choices[k].media)) {
-            if (choices[k].media.length === 1) {
-              choices[k].media = choices[k].media[0];
-            } else if (choices[k].media.length === 0) {
-              delete choices[k].media;
-            }
-          }
-        }
-
-        // TỰ ĐỘNG PHÂN BỐ ẢNH: nếu có đúng 4 ảnh trong câu hỏi
-        if (autoDistributeImages) {
-          // Gom tất cả ảnh từ question và choices
-          const allMedia = [];
-          
-          // Ảnh từ question
-          if (questionMediaNames.length > 0) {
-            allMedia.push(...questionMediaNames);
-          }
-          
-          // Ảnh từ choices
-          for (const k of ['A', 'B', 'C', 'D']) {
-            if (choices[k].media) {
-              if (Array.isArray(choices[k].media)) {
-                allMedia.push(...choices[k].media);
-              } else {
-                allMedia.push(choices[k].media);
-              }
-            }
-          }
-
-          // Nếu có đúng 4 ảnh → phân bố lại
-          if (allMedia.length === 4) {
-            // Xóa media khỏi question
-            questionMediaNames.length = 0;
-            
-            // Gán mỗi ảnh cho A, B, C, D
-            choices.A.media = allMedia[0];
-            choices.B.media = allMedia[1];
-            choices.C.media = allMedia[2];
-            choices.D.media = allMedia[3];
-          }
-        }
-        
-        questions.push({
-          type: 'multiple_choice',
-          question: {
-            text: qtext,
-            media: questionMediaNames.length ? (questionMediaNames.length === 1 ? questionMediaNames[0] : questionMediaNames) : undefined
-          },
-          choices,
-          correct: ''
-        });
-      } else if (mode === 'tf') {
-        // Helper đã định nghĩa ở trên, dùng lại
-        const getMediaFromNode = (n) => {
-          const names = [];
-          if (n.nodeType === 1 && n.tagName === 'IMG') {
-            const name = n.getAttribute('data-indexeddb-name');
-            if (name) names.push(name);
-          }
-          if (n.querySelectorAll) {
-            for (const im of Array.from(n.querySelectorAll('img'))) {
-              const nm = im.getAttribute('data-indexeddb-name');
-              if (nm) names.push(nm);
-            }
-          }
-          return names;
-        };
-
-        let combined = blockText.replace(/\r/g, '').replace(/\t/g, ' ');
-        combined = combined.replace(/\s*a\)|\s*a\./gi, '\na.').replace(/\s*b\)|\s*b\./gi, '\nb.').replace(/\s*c\)|\s*c\./gi, '\nc.').replace(/\s*d\)|\s*d\./gi, '\nd.');
-        const itLines = combined.split('\n').map(s => s.trim()).filter(Boolean);
-        
-        let header = '';
-        if (!/^a\./i.test(itLines[0])) {
-          header = itLines.shift();
-        }
-
-        // Tìm node chứa item a. đầu tiên
-        let firstItemNodeIndex = -1;
-        for (let idx = 0; idx < blockNodes.length; idx++) {
-          const txt = (blockNodes[idx].textContent || '').trim();
-          if (/a\./i.test(txt)) {
-            firstItemNodeIndex = idx;
-            break;
-          }
-        }
-
-        // Ảnh của câu hỏi: chỉ lấy từ các node TRƯỚC item a.
-        const questionMediaNames = [];
-        const endIdx = firstItemNodeIndex >= 0 ? firstItemNodeIndex : blockNodes.length;
-        for (let idx = 0; idx < endIdx; idx++) {
-          questionMediaNames.push(...getMediaFromNode(blockNodes[idx]));
-        }
-        
-        const items = {};
-        for (const line of itLines) {
-          const m = line.match(/^([a-d])\.\s*(.*)/i);
-          if (m) items[m[1]] = { text: m[2].trim() };
-        }
-
-        // Gán ảnh cho từng item
-        if (firstItemNodeIndex >= 0) {
-          let currentItem = null;
-          for (let idx = firstItemNodeIndex; idx < blockNodes.length; idx++) {
-            const n = blockNodes[idx];
-            const txt = (n.textContent || '').trim();
-            const itemMatch = txt.match(/^([a-d])\./i);
-            
-            if (itemMatch) {
-              currentItem = itemMatch[1].toLowerCase();
-            } else if (currentItem) {
-              // Node này không phải item mới → ảnh thuộc item hiện tại
-              const media = getMediaFromNode(n);
-              if (media.length > 0) {
-                if (!items[currentItem].media) items[currentItem].media = [];
-                if (!Array.isArray(items[currentItem].media)) {
-                  items[currentItem].media = [items[currentItem].media];
-                }
-                items[currentItem].media.push(...media);
-              }
-            }
-          }
-        }
-
-        // Chuẩn hóa media của items
-        for (const k of ['a', 'b', 'c', 'd']) {
-          if (items[k] && items[k].media && Array.isArray(items[k].media)) {
-            if (items[k].media.length === 1) {
-              items[k].media = items[k].media[0];
-            } else if (items[k].media.length === 0) {
-              delete items[k].media;
-            }
-          }
-        }
-        
-        if (Object.keys(items).length > 0) {
-          questions.push({
-            type: 'true_false_group',
-            question: {
-              text: header || '',
-              media: questionMediaNames.length ? (questionMediaNames.length === 1 ? questionMediaNames[0] : questionMediaNames) : undefined
-            },
-            items
-          });
+      // Tìm dòng đầu tiên chứa A.
+      let firstChoiceLineIdx = lines.findIndex(l => /^A\./.test(l));
+      
+      // Phần đề bài là tất cả trước A.
+      const questionLines = firstChoiceLineIdx > 0 ? lines.slice(0, firstChoiceLineIdx) : [];
+      const qtext = questionLines.join(' ').replace(/^(câu\s*\d+[:.]?\s*|\d+\.\s*)/i, '').trim();
+      
+      // Tìm node chứa lựa chọn A. đầu tiên
+      let firstChoiceNodeIndex = -1;
+      for (let idx = 0; idx < blockNodes.length; idx++) {
+        const txt = (blockNodes[idx].textContent || '').trim();
+        if (/A\./i.test(txt)) {
+          firstChoiceNodeIndex = idx;
+          break;
         }
       }
-    } else {
-      i++;
+
+      // Ảnh của câu hỏi: chỉ lấy từ các node TRƯỚC lựa chọn A.
+      const questionMediaNames = [];
+      const mediaEndIdx = firstChoiceNodeIndex >= 0 ? firstChoiceNodeIndex : blockNodes.length;
+      for (let idx = 0; idx < mediaEndIdx; idx++) {
+        questionMediaNames.push(...getMediaFromNode(blockNodes[idx]));
+      }
+
+      // Lấy text của các lựa chọn
+      const choiceLines = lines.filter(l => /^[A-D]\./.test(l));
+      const choices = {};
+      const map = {};
+      for (const l of choiceLines) {
+        const m = l.match(/^([A-D])\.\s*(.*)$/);
+        if (m) map[m[1]] = m[2].trim();
+      }
+      ['A', 'B', 'C', 'D'].forEach(k => {
+        choices[k] = { text: map[k] || '' };
+      });
+
+      // Gán ảnh cho từng lựa chọn
+      if (firstChoiceNodeIndex >= 0) {
+        let currentChoice = null;
+        for (let idx = firstChoiceNodeIndex; idx < blockNodes.length; idx++) {
+          const n = blockNodes[idx];
+          const txt = (n.textContent || '').trim();
+          const choiceMatch = txt.match(/^([A-D])\./);
+          
+          if (choiceMatch) {
+            currentChoice = choiceMatch[1];
+          }
+          
+          const media = getMediaFromNode(n);
+          if (media.length > 0 && currentChoice) {
+            if (!choices[currentChoice].media) choices[currentChoice].media = [];
+            if (!Array.isArray(choices[currentChoice].media)) {
+              choices[currentChoice].media = [choices[currentChoice].media];
+            }
+            choices[currentChoice].media.push(...media);
+          }
+        }
+      }
+
+      // Chuẩn hóa media
+      for (const k of ['A', 'B', 'C', 'D']) {
+        if (choices[k].media && Array.isArray(choices[k].media)) {
+          if (choices[k].media.length === 1) {
+            choices[k].media = choices[k].media[0];
+          } else if (choices[k].media.length === 0) {
+            delete choices[k].media;
+          }
+        }
+      }
+
+      // Tự động phân bố ảnh nếu có đúng 4 ảnh
+      if (autoDistributeImages) {
+        const allMedia = [...questionMediaNames];
+        for (const k of ['A', 'B', 'C', 'D']) {
+          if (choices[k].media) {
+            if (Array.isArray(choices[k].media)) {
+              allMedia.push(...choices[k].media);
+            } else {
+              allMedia.push(choices[k].media);
+            }
+          }
+        }
+
+        if (allMedia.length === 4) {
+          questionMediaNames.length = 0;
+          choices.A.media = allMedia[0];
+          choices.B.media = allMedia[1];
+          choices.C.media = allMedia[2];
+          choices.D.media = allMedia[3];
+        }
+      }
+      
+      questions.push({
+        type: 'multiple_choice',
+        question: {
+          text: qtext,
+          media: questionMediaNames.length ? (questionMediaNames.length === 1 ? questionMediaNames[0] : questionMediaNames) : undefined
+        },
+        choices,
+        correct: ''
+      });
+      
+    } else if (questionType === 'true_false_group') {
+      // =====================================================
+      // PARSE CHO TRẮC NGHIỆM ĐÚNG SAI
+      // Cấu trúc: Đề bài + a. b. c. d. (phát biểu) + có thể có A. B. C. D. (đáp án cuối)
+      // =====================================================
+      
+      // Chuẩn hóa: đặt mỗi item trên dòng riêng
+      let combined = normalized
+        .replace(/(?:^|[\s])a[.)]/gim, '\na.')
+        .replace(/(?:^|[\s])b[.)]/gim, '\nb.')
+        .replace(/(?:^|[\s])c[.)]/gim, '\nc.')
+        .replace(/(?:^|[\s])d[.)]/gim, '\nd.');
+      
+      // Xóa phần đáp án ABCD cuối nếu có (dạng "A. 1 B. 2 C. 3 D. 4")
+      combined = combined.replace(/\s*[A-D]\.\s*\d+(\s+[A-D]\.\s*\d+)*\s*$/gi, '');
+      
+      const itLines = combined.split('\n').map(s => s.trim()).filter(Boolean);
+      
+      // Lấy header (đề bài) - tất cả trước a.
+      let header = '';
+      let headerLines = [];
+      for (let i = 0; i < itLines.length; i++) {
+        if (/^a\./i.test(itLines[i])) {
+          headerLines = itLines.slice(0, i);
+          break;
+        }
+      }
+      if (headerLines.length === 0 && itLines.length > 0 && !/^a\./i.test(itLines[0])) {
+        headerLines = [itLines.shift()];
+      }
+      header = headerLines.join(' ').replace(/^(câu\s*\d+[:.]?\s*|\d+\.\s*)/i, '').trim();
+
+      // Tìm node chứa item a. đầu tiên
+      let firstItemNodeIndex = -1;
+      for (let idx = 0; idx < blockNodes.length; idx++) {
+        const txt = (blockNodes[idx].textContent || '').trim();
+        if (/^a[.)]/i.test(txt) || /(?:^|[\s])a[.)]\s/i.test(txt)) {
+          firstItemNodeIndex = idx;
+          break;
+        }
+      }
+
+      // Ảnh của câu hỏi: chỉ lấy từ các node TRƯỚC item a.
+      const questionMediaNames = [];
+      const endIdx = firstItemNodeIndex >= 0 ? firstItemNodeIndex : blockNodes.length;
+      for (let idx = 0; idx < endIdx; idx++) {
+        questionMediaNames.push(...getMediaFromNode(blockNodes[idx]));
+      }
+      
+      // Lấy các items a, b, c, d
+      const items = {};
+      for (const line of itLines) {
+        const m = line.match(/^([a-d])\.\s*(.*)/i);
+        if (m) {
+          const key = m[1].toLowerCase();
+          items[key] = { text: m[2].trim() };
+        }
+      }
+
+      // Gán ảnh cho từng item
+      if (firstItemNodeIndex >= 0) {
+        let currentItem = null;
+        for (let idx = firstItemNodeIndex; idx < blockNodes.length; idx++) {
+          const n = blockNodes[idx];
+          const txt = (n.textContent || '').trim();
+          const itemMatch = txt.match(/^([a-d])[.)]/i);
+          
+          if (itemMatch) {
+            currentItem = itemMatch[1].toLowerCase();
+          }
+          
+          const media = getMediaFromNode(n);
+          if (media.length > 0 && currentItem) {
+            if (!items[currentItem]) items[currentItem] = { text: '' };
+            if (!items[currentItem].media) items[currentItem].media = [];
+            if (!Array.isArray(items[currentItem].media)) {
+              items[currentItem].media = [items[currentItem].media];
+            }
+            items[currentItem].media.push(...media);
+          }
+        }
+      }
+
+      // Chuẩn hóa media của items
+      for (const k of ['a', 'b', 'c', 'd']) {
+        if (items[k] && items[k].media && Array.isArray(items[k].media)) {
+          if (items[k].media.length === 1) {
+            items[k].media = items[k].media[0];
+          } else if (items[k].media.length === 0) {
+            delete items[k].media;
+          }
+        }
+      }
+      
+      if (Object.keys(items).length > 0) {
+        questions.push({
+          type: 'true_false_group',
+          question: {
+            text: header,
+            media: questionMediaNames.length ? (questionMediaNames.length === 1 ? questionMediaNames[0] : questionMediaNames) : undefined
+          },
+          items
+        });
+      }
     }
   }
 
@@ -512,7 +725,6 @@ async function parseHTMLString(htmlText, autoDistributeImages = true) {
 async function createQuizZip(data) {
   const zip = new JSZip();
 
-  // Default config
   const config = `metadata:
   title: "Đề thi mặc định"
   subject: "Chưa phân loại"
@@ -528,11 +740,9 @@ exam:
   shuffle_answers: true`;
 
   zip.file('config.yaml', config);
-
   const questionsYaml = toYAML(data);
   zip.file('questions.yaml', questionsYaml);
 
-  // Thêm các file media vào thư mục media
   const mediaFolder = zip.folder('media');
   for (const [name, blob] of data.mediaFiles.entries()) {
     mediaFolder.file(name, blob);
@@ -543,7 +753,7 @@ exam:
 
 // Drag and drop support
 document.addEventListener('DOMContentLoaded', () => {
-  const dropArea = document.querySelector('.border-dashed');
+  const dropArea = document.getElementById('dropZone');
   
   ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
     dropArea.addEventListener(eventName, preventDefaults, false);
@@ -556,13 +766,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   ['dragenter', 'dragover'].forEach(eventName => {
     dropArea.addEventListener(eventName, () => {
-      dropArea.classList.add('border-emerald-500', 'bg-emerald-50');
+      dropArea.classList.add('drop-zone-active');
     }, false);
   });
 
   ['dragleave', 'drop'].forEach(eventName => {
     dropArea.addEventListener(eventName, () => {
-      dropArea.classList.remove('border-emerald-500', 'bg-emerald-50');
+      dropArea.classList.remove('drop-zone-active');
     }, false);
   });
 

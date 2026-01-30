@@ -94,7 +94,7 @@ questions:
 ### 3.2. Câu hỏi Đúng/Sai (`true_false_group`)
 
 ```yaml
-  - type: true_false_group # Không có questions: vì trắc nghiệm trong một questions.yaml chỉ có duy nhất một questions: đã có ở trên, nếu chỉ có đúng sai thì mới để questions: ở đoạn này
+  - type: true_false_group # Không có questions: vì trong một questions.yaml chỉ có duy nhất một questions: đã có ở trên, nếu chỉ có trắc nghiệm đúng sai thì mới để questions: ở đoạn này
     question:
       text: "Đề bài chung cho nhóm câu Đúng/Sai"
       media: ["diagram.png", "intro.mp3"]        # Nhiều file

@@ -202,7 +202,7 @@ media:
 - Bắt buộc có `config.yaml` và `questions.yaml` ở thư mục gốc
 - Thư mục `media/` phải ở cùng cấp với 2 file YAML
 - Không nén thư mục cha
-
+- Đề bài, đáp án thực chất là markdown, nên có thể dùng markdown trong câu hỏi và lựa chọn, câu hỏi đúng sai,...
 ### Media:
 - Tên file không chứa ký tự đặc biệt
 - Tên file phân biệt hoa thường (case-sensitive)

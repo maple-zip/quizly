@@ -51,6 +51,22 @@
             0%, 100% { opacity: 1; }
             50% { opacity: 0.6; }
         }
+        @keyframes slideDown {
+            from { transform: translateY(-100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes slideUp {
+            from { transform: translateY(0); opacity: 1; }
+            to { transform: translateY(-100%); opacity: 0; }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
         .spinner {
             animation: spin 1s linear infinite;
         }
@@ -83,6 +99,19 @@
         .progress-bar {
             transition: width 0.3s ease;
         }
+        /* Mobile expand panel animations */
+        .expand-panel-enter {
+            animation: slideDown 0.3s ease-out forwards;
+        }
+        .expand-panel-leave {
+            animation: slideUp 0.3s ease-out forwards;
+        }
+        .expand-overlay-enter {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+        .expand-overlay-leave {
+            animation: fadeOut 0.3s ease-out forwards;
+        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-primary-600 to-primary-900 min-h-screen font-sans text-primary-950">
@@ -93,6 +122,29 @@
             <p id="modalMessage" class="text-lg text-primary-900 mb-6 text-center"></p>
             <div id="modalButtons" class="flex gap-3 justify-center">
                 <!-- Buttons will be inserted dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Resume Session Dialog -->
+    <div id="resumeDialog" class="fixed inset-0 bg-black/60 z-[9998] hidden items-center justify-center p-4">
+        <div id="resumeDialogContent" class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 transform scale-95 opacity-0 transition-all duration-200">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-primary-900 mb-2">Phát hiện bài làm chưa hoàn thành</h3>
+                <p class="text-primary-600">Bạn có muốn tiếp tục làm bài từ lần trước không?</p>
+            </div>
+            <div class="flex gap-3 justify-center">
+                <button id="resumeNewBtn" class="px-6 py-2.5 bg-primary-100 text-primary-700 rounded-lg font-semibold hover:bg-primary-200 transition-colors">
+                    Làm lại từ đầu
+                </button>
+                <button id="resumeContinueBtn" class="px-6 py-2.5 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors">
+                    Tiếp tục làm bài
+                </button>
             </div>
         </div>
     </div>
@@ -178,9 +230,18 @@
         
         <!-- Mobile Top Bar -->
         <div id="mobileTopBar" class="lg:hidden fixed top-0 left-0 right-0 bg-white shadow-lg z-50">
-            <!-- Row 1: Question Navigation -->
-            <div id="mobileQuestionNav" class="flex items-center gap-2 px-3 py-2 border-b border-primary-100 overflow-x-auto hide-scrollbar">
-                <!-- Question cells will be inserted here -->
+            <!-- Row 1: Question Navigation with Expand Button -->
+            <div class="flex items-center gap-2 px-3 py-2 border-b border-primary-100">
+                <!-- Expand Button -->
+                <button id="mobileExpandBtn" class="flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-lg bg-primary-100 text-primary-600 hover:bg-primary-200 transition-all">
+                    <svg id="expandIcon" class="w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+                <!-- Question cells container -->
+                <div id="mobileQuestionNav" class="flex-1 flex items-center gap-2 overflow-x-auto hide-scrollbar">
+                    <!-- Question cells will be inserted here -->
+                </div>
             </div>
             <!-- Row 2: Title, Timer, Submit -->
             <div class="flex items-center justify-between px-3 py-2 gap-2">
@@ -190,6 +251,28 @@
                     Nộp bài
                 </button>
             </div>
+        </div>
+
+        <!-- Mobile Expand Panel Overlay -->
+        <div id="mobileExpandOverlay" class="lg:hidden fixed inset-0 bg-black/50 z-[60] hidden">
+            <!-- Panel Content (max 2/3 screen from top) -->
+            <div id="mobileExpandPanel" class="bg-white shadow-2xl max-h-[66vh] overflow-y-auto">
+                <div class="p-4">
+                    <div class="flex items-center justify-between mb-4">
+                        <h4 class="text-lg font-bold text-primary-900">Danh sách câu hỏi</h4>
+                        <button id="mobileExpandClose" class="w-8 h-8 flex items-center justify-center rounded-lg bg-primary-100 text-primary-600 hover:bg-primary-200 transition-all">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div id="mobileExpandGrid" class="grid grid-cols-6 gap-2">
+                        <!-- Question cells will be inserted here -->
+                    </div>
+                </div>
+            </div>
+            <!-- Click outside to close -->
+            <div id="mobileExpandBackdrop" class="flex-1"></div>
         </div>
 
         <!-- Desktop Layout -->
@@ -237,24 +320,91 @@
     </div>
 
     <!-- Results Screen -->
-    <div id="resultsScreen" class="hidden min-h-screen p-4 lg:p-8">
-        <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-2xl p-6 sm:p-10">
-            <h1 class="text-2xl sm:text-3xl font-bold text-primary-900 text-center mb-8">Kết quả ôn tập</h1>
-            
-            <div id="scoreSummary" class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-                <!-- Score cards -->
+    <div id="resultsScreen" class="hidden min-h-screen">
+        <!-- Mobile Results Top Bar -->
+        <div id="mobileResultsTopBar" class="lg:hidden fixed top-0 left-0 right-0 bg-white shadow-lg z-50">
+            <div class="flex items-center gap-2 px-3 py-2 border-b border-primary-100">
+                <!-- Expand Button -->
+                <button id="mobileResultsExpandBtn" class="flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-lg bg-primary-100 text-primary-600 hover:bg-primary-200 transition-all">
+                    <svg class="w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+                <!-- Wrong answers only or message -->
+                <div id="mobileResultsNav" class="flex-1 flex items-center gap-2 overflow-x-auto hide-scrollbar">
+                    <!-- Wrong question cells or message will be inserted here -->
+                </div>
             </div>
+            <div class="px-3 py-2">
+                <h3 id="mobileResultsTitle" class="text-sm font-semibold text-primary-900">Kết quả ôn tập</h3>
+            </div>
+        </div>
 
-            <div class="mb-8">
-                <h2 class="text-xl sm:text-2xl font-bold text-primary-900 mb-6">Chi tiết kết quả</h2>
-                <div id="resultsDetailsContainer" class="space-y-4">
-                    <!-- Results -->
+        <!-- Mobile Results Expand Panel Overlay -->
+        <div id="mobileResultsExpandOverlay" class="lg:hidden fixed inset-0 bg-black/50 z-[60] hidden">
+            <div id="mobileResultsExpandPanel" class="bg-white shadow-2xl max-h-[66vh] overflow-y-auto">
+                <div class="p-4">
+                    <div class="flex items-center justify-between mb-4">
+                        <h4 class="text-lg font-bold text-primary-900">Tổng kết đáp án</h4>
+                        <button id="mobileResultsExpandClose" class="w-8 h-8 flex items-center justify-center rounded-lg bg-primary-100 text-primary-600 hover:bg-primary-200 transition-all">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div id="mobileResultsExpandGrid" class="flex flex-wrap gap-2">
+                        <!-- Question cells with correct/wrong colors -->
+                    </div>
+                </div>
+            </div>
+            <div id="mobileResultsExpandBackdrop" class="flex-1"></div>
+        </div>
+
+        <!-- Desktop Results Layout -->
+        <div class="flex">
+            <!-- Desktop Results Sidebar -->
+            <div id="resultsSidebar" class="hidden lg:flex w-72 bg-white shadow-xl flex-col sticky top-0 h-screen">
+                <div class="p-5 border-b border-primary-100">
+                    <a href="https://maple-zip.github.io/quizly" class="block mb-3" target="_blank">
+                        <span class="text-xl font-bold text-primary-600">Quizly</span>
+                    </a>
+                    <h3 id="sidebarResultsTitle" class="text-base font-semibold text-primary-900 line-clamp-2">Kết quả ôn tập</h3>
+                </div>
+                
+                <div id="resultsQuestionGridContainer" class="flex-1 overflow-y-auto p-5 hide-scrollbar">
+                    <div id="resultsQuestionGrid" class="grid grid-cols-5 gap-2">
+                        <!-- Question cells with correct/wrong colors -->
+                    </div>
+                </div>
+                
+                <div class="p-5 border-t border-primary-100">
+                    <button id="sidebarReviewBtn" class="w-full bg-primary-600 text-white py-3 rounded-xl font-semibold hover:bg-primary-700 transition-all hover:shadow-lg active:scale-[0.98]">
+                        Làm lại
+                    </button>
                 </div>
             </div>
 
-            <button id="reviewBtn" class="w-full sm:w-auto bg-primary-600 text-white px-8 py-3 rounded-xl font-semibold hover:bg-primary-700 transition-all">
-                Quay lại
-            </button>
+            <!-- Results Main Content -->
+            <div class="flex-1 p-4 lg:p-8 pt-24 lg:pt-8">
+                <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-2xl p-6 sm:p-10">
+                    <h1 class="text-2xl sm:text-3xl font-bold text-primary-900 text-center mb-8">Kết quả ôn tập</h1>
+                    
+                    <div id="scoreSummary" class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+                        <!-- Score cards -->
+                    </div>
+
+                    <div class="mb-8">
+                        <h2 class="text-xl sm:text-2xl font-bold text-primary-900 mb-6">Chi tiết kết quả</h2>
+                        <div id="resultsDetailsContainer" class="space-y-4">
+                            <!-- Results -->
+                        </div>
+                    </div>
+
+                    <button id="reviewBtn" class="w-full sm:w-auto bg-primary-600 text-white px-8 py-3 rounded-xl font-semibold hover:bg-primary-700 transition-all">
+                        Làm lại
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -270,10 +420,49 @@
         let currentPlayingMedia = null;
         let currentQuestionIndex = 0;
         let isForceSubmit = false;
+        let isMobileExpandOpen = false;
+        let isMobileResultsExpandOpen = false;
+        let questionResults = []; // Track correct/wrong for each question
+        let actualDuration = 0; // Track actual time spent
 
         // Get ZIP URL from query string
         const urlParams = new URLSearchParams(window.location.search);
         const zipUrl = urlParams.get('zip');
+
+        // LocalStorage key for this quiz
+        function getStorageKey() {
+            return 'quizly_progress_' + btoa(zipUrl || '').slice(0, 32);
+        }
+
+        // Save progress to localStorage
+        function saveProgress() {
+            if (!zipUrl) return;
+            const data = {
+                zipUrl: zipUrl,
+                userAnswers: userAnswers,
+                startTime: startTime,
+                currentQuestionIndex: currentQuestionIndex,
+                savedAt: Date.now()
+            };
+            localStorage.setItem(getStorageKey(), JSON.stringify(data));
+        }
+
+        // Load progress from localStorage
+        function loadProgress() {
+            const key = getStorageKey();
+            const saved = localStorage.getItem(key);
+            if (!saved) return null;
+            try {
+                return JSON.parse(saved);
+            } catch (e) {
+                return null;
+            }
+        }
+
+        // Clear progress from localStorage
+        function clearProgress() {
+            localStorage.removeItem(getStorageKey());
+        }
 
         // Initialize
         document.addEventListener('DOMContentLoaded', async () => {
@@ -351,6 +540,45 @@
             return await showModal(message, [
                 { text: 'OK', value: true, primary: true }
             ]);
+        }
+
+        // ============ RESUME DIALOG ============
+        function showResumeDialog() {
+            return new Promise((resolve) => {
+                const overlay = document.getElementById('resumeDialog');
+                const content = document.getElementById('resumeDialogContent');
+
+                overlay.classList.remove('hidden');
+                overlay.classList.add('flex');
+                
+                requestAnimationFrame(() => {
+                    content.classList.remove('scale-95', 'opacity-0');
+                    content.classList.add('scale-100', 'opacity-100');
+                });
+
+                document.getElementById('resumeNewBtn').onclick = () => {
+                    closeResumeDialog();
+                    resolve(false);
+                };
+
+                document.getElementById('resumeContinueBtn').onclick = () => {
+                    closeResumeDialog();
+                    resolve(true);
+                };
+            });
+        }
+
+        function closeResumeDialog() {
+            const overlay = document.getElementById('resumeDialog');
+            const content = document.getElementById('resumeDialogContent');
+            
+            content.classList.remove('scale-100', 'opacity-100');
+            content.classList.add('scale-95', 'opacity-0');
+            
+            setTimeout(() => {
+                overlay.classList.remove('flex');
+                overlay.classList.add('hidden');
+            }, 200);
         }
 
         // ============ LOADING WITH PROGRESS ============
@@ -524,11 +752,28 @@
 
             document.getElementById('examDescription').textContent = configData.exam.description;
 
-            document.getElementById('startExamBtn').addEventListener('click', startExam);
+            document.getElementById('startExamBtn').addEventListener('click', checkAndStartExam);
+        }
+
+        // Check for saved progress and start exam
+        async function checkAndStartExam() {
+            const saved = loadProgress();
+            
+            if (saved && saved.userAnswers && Object.keys(saved.userAnswers).length > 0) {
+                const shouldResume = await showResumeDialog();
+                if (shouldResume) {
+                    startExam(saved);
+                } else {
+                    clearProgress();
+                    startExam(null);
+                }
+            } else {
+                startExam(null);
+            }
         }
 
         // Start exam
-        function startExam() {
+        function startExam(savedData) {
             document.getElementById('examInfoScreen').classList.add('hidden');
             document.getElementById('examInfoScreen').classList.remove('flex');
             document.getElementById('examScreen').classList.remove('hidden');
@@ -541,14 +786,132 @@
             // Update document title
             document.title = title;
 
-            startTime = Date.now();
+            // Restore saved data or start fresh
+            if (savedData) {
+                userAnswers = savedData.userAnswers || {};
+                startTime = savedData.startTime || Date.now();
+                currentQuestionIndex = savedData.currentQuestionIndex || 0;
+            } else {
+                startTime = Date.now();
+                userAnswers = {};
+                currentQuestionIndex = 0;
+            }
+
             initTimer();
             renderMobileQuestionNav();
             renderDesktopQuestionGrid();
+            renderMobileExpandGrid();
             renderQuestions();
+
+            // Setup mobile expand functionality
+            setupMobileExpand();
 
             document.getElementById('mobileSubmitBtn').addEventListener('click', () => submitExam(false));
             document.getElementById('desktopSubmitBtn').addEventListener('click', () => submitExam(false));
+
+            // Scroll to saved question if resuming
+            if (savedData && savedData.currentQuestionIndex > 0) {
+                setTimeout(() => scrollToQuestion(savedData.currentQuestionIndex), 500);
+            }
+
+            // Save initial progress
+            saveProgress();
+        }
+
+        // Setup mobile expand panel
+        function setupMobileExpand() {
+            const expandBtn = document.getElementById('mobileExpandBtn');
+            const overlay = document.getElementById('mobileExpandOverlay');
+            const closeBtn = document.getElementById('mobileExpandClose');
+            const backdrop = document.getElementById('mobileExpandBackdrop');
+            const panel = document.getElementById('mobileExpandPanel');
+
+            expandBtn.addEventListener('click', toggleMobileExpand);
+            closeBtn.addEventListener('click', closeMobileExpand);
+            backdrop.addEventListener('click', closeMobileExpand);
+        }
+
+        function toggleMobileExpand() {
+            if (isMobileExpandOpen) {
+                closeMobileExpand();
+            } else {
+                openMobileExpand();
+            }
+        }
+
+        function openMobileExpand() {
+            const overlay = document.getElementById('mobileExpandOverlay');
+            const panel = document.getElementById('mobileExpandPanel');
+            
+            isMobileExpandOpen = true;
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex', 'flex-col');
+            panel.classList.add('expand-panel-enter');
+            overlay.classList.add('expand-overlay-enter');
+            
+            // Update grid with current state
+            updateMobileExpandGrid();
+        }
+
+        function closeMobileExpand() {
+            const overlay = document.getElementById('mobileExpandOverlay');
+            const panel = document.getElementById('mobileExpandPanel');
+            
+            isMobileExpandOpen = false;
+            panel.classList.remove('expand-panel-enter');
+            panel.classList.add('expand-panel-leave');
+            overlay.classList.remove('expand-overlay-enter');
+            overlay.classList.add('expand-overlay-leave');
+            
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+                overlay.classList.remove('flex', 'flex-col', 'expand-overlay-leave');
+                panel.classList.remove('expand-panel-leave');
+            }, 300);
+        }
+
+        // Render mobile expand grid
+        function renderMobileExpandGrid() {
+            const grid = document.getElementById('mobileExpandGrid');
+            grid.innerHTML = '';
+
+            questions.forEach((q, index) => {
+                const cell = document.createElement('button');
+                cell.className = 'aspect-square flex items-center justify-center rounded-lg text-sm font-semibold transition-all bg-primary-50 text-primary-700 hover:bg-primary-100';
+                cell.textContent = index + 1;
+                cell.dataset.index = index;
+                cell.id = `expand-cell-${index}`;
+                cell.addEventListener('click', () => {
+                    scrollToQuestion(index);
+                    closeMobileExpand();
+                });
+                grid.appendChild(cell);
+            });
+        }
+
+        // Update mobile expand grid state
+        function updateMobileExpandGrid() {
+            questions.forEach((q, index) => {
+                const cell = document.getElementById(`expand-cell-${index}`);
+                if (!cell) return;
+                
+                const answered = isQuestionAnswered(index);
+                cell.classList.remove('bg-primary-50', 'bg-success-100', 'text-success-600', 'ring-2', 'ring-primary-400');
+                
+                if (index === currentQuestionIndex) {
+                    if (answered) {
+                        cell.classList.add('bg-success-100', 'text-success-600', 'ring-2', 'ring-primary-400');
+                    } else {
+                        cell.classList.add('bg-primary-100', 'ring-2', 'ring-primary-400');
+                    }
+                } else {
+                    if (answered) {
+                        cell.classList.add('bg-success-100', 'text-success-600');
+                    } else {
+                        cell.classList.add('bg-primary-50');
+                    }
+                }
+            });
         }
 
         // Initialize timer
@@ -602,11 +965,23 @@
             return `${pad(h)}:${pad(m)}:${pad(s)}`;
         }
 
+        function formatTimeText(seconds) {
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            const s = seconds % 60;
+            
+            let result = '';
+            if (h > 0) result += `${h} giờ `;
+            if (m > 0) result += `${m} phút `;
+            result += `${s} giây`;
+            return result;
+        }
+
         function pad(num) {
             return num.toString().padStart(2, '0');
         }
 
-        // Render mobile question nav (5 cells visible, current in center)
+        // Render mobile question nav (cells only, no expand button here)
         function renderMobileQuestionNav() {
             const nav = document.getElementById('mobileQuestionNav');
             nav.innerHTML = '';
@@ -632,23 +1007,18 @@
 
             // Update active state
             nav.querySelectorAll('button').forEach((btn, i) => {
-                // Reset all dynamic classes
                 btn.classList.remove('bg-primary-600', 'bg-primary-100', 'text-white', 'ring-2', 'ring-primary-400', 'ring-success-500', 'bg-success-100', 'text-success-600');
                 
                 const answered = isQuestionAnswered(i);
                 
                 if (i === index) {
-                    // Current question being viewed
                     if (answered) {
-                        // Answered: green background with green text
                         btn.classList.add('bg-success-100', 'text-success-600', 'ring-2', 'ring-primary-400');
                     } else {
-                        // Not answered: light blue background, keep dark blue text for visibility
                         btn.classList.add('bg-primary-100', 'text-primary-700', 'ring-2', 'ring-primary-400');
                     }
                     btn.classList.remove('bg-primary-50');
                 } else {
-                    // Not current question
                     if (answered) {
                         btn.classList.add('bg-success-100', 'text-success-600');
                     } else {
@@ -694,16 +1064,20 @@
         function updateQuestionGrid(qIndex) {
             const mobileCell = document.getElementById(`mobile-cell-${qIndex}`);
             const desktopCell = document.getElementById(`desktop-cell-${qIndex}`);
+            const expandCell = document.getElementById(`expand-cell-${qIndex}`);
             
             const answered = isQuestionAnswered(qIndex);
             
-            [mobileCell, desktopCell].forEach(cell => {
+            [mobileCell, desktopCell, expandCell].forEach(cell => {
                 if (!cell) return;
                 if (answered) {
                     cell.classList.add('bg-success-100', 'text-success-600');
                     cell.classList.remove('bg-primary-50', 'text-primary-700');
                 }
             });
+
+            // Save progress when answer changes
+            saveProgress();
         }
 
         // Get media URL from filename
@@ -822,87 +1196,104 @@
 
             setupEventListeners();
             setupMediaPlayers();
+
+            // Restore answered state visuals
+            Object.keys(userAnswers).forEach(idx => {
+                const qIndex = parseInt(idx);
+                if (isQuestionAnswered(qIndex)) {
+                    updateQuestionGrid(qIndex);
+                    
+                    // Restore radio/checkbox states
+                    const q = questions[qIndex];
+                    if (q.type === 'multiple_choice') {
+                        const radio = document.querySelector(`input[name="q${qIndex}"][value="${userAnswers[qIndex]}"]`);
+                        if (radio) radio.checked = true;
+                    } else if (q.type === 'true_false_group') {
+                        const answers = userAnswers[qIndex] || {};
+                        Object.keys(answers).forEach(itemIdx => {
+                            const val = answers[itemIdx];
+                            const radio = document.querySelector(`input[name="q${qIndex}_item${itemIdx}"][value="${val}"]`);
+                            if (radio) radio.checked = true;
+                        });
+                    }
+                }
+            });
         }
 
-        // Render multiple choice
+        // Render multiple choice question
         function renderMultipleChoice(q, qIndex) {
-            if (!q.shuffledChoices) shuffleChoicesKeepOrder(q);
-
-            let html = '<div class="space-y-3">';
-            
-            q.shuffledChoices.forEach((choice, index) => {
+            let html = '<div class="space-y-2">';
+            q.shuffledChoices.forEach((choice, choiceIndex) => {
+                const choiceId = `q${qIndex}_c${choiceIndex}`;
                 html += `
-                    <label class="choice-item flex items-start gap-3 p-4 border-2 border-primary-100 rounded-xl cursor-pointer transition-all hover:border-primary-300 hover:bg-primary-50/50">
-                        <input type="radio" name="q${qIndex}" value="${index}" 
-                               class="mt-1 accent-primary-600"
-                               onchange="updateAnswer(${qIndex}, ${index})">
-                        <span class="font-semibold text-primary-600 min-w-[24px]">${index + 1}.</span>
-                        <span class="flex-1 text-primary-800">
-                            ${choice.text || ''}
-                            ${choice.media ? renderMedia(choice.media) : ''}
-                        </span>
-                    </label>
+                    <label for="${choiceId}" class="choice-item flex items-start gap-3 p-3 rounded-lg border-2 border-primary-100 cursor-pointer hover:border-primary-300 transition-colors">
+                        <input type="radio" name="q${qIndex}" value="${choiceIndex}" id="${choiceId}" class="mt-1 w-4 h-4 text-primary-600" onchange="handleMCAnswer(${qIndex}, ${choiceIndex})">
+                        <span class="font-semibold text-primary-600">${choiceIndex + 1}.</span>
+                        <span class="flex-1 text-primary-800">${choice.text || ''}</span>
                 `;
+                if (choice.media) {
+                    html += renderMedia(choice.media);
+                }
+                html += '</label>';
             });
-            
             html += '</div>';
             return html;
         }
 
-        // Render true/false group
+        // Render true/false group question
         function renderTrueFalseGroup(q, qIndex) {
-            if (!q.shuffledItems) shuffleItemsKeepOrder(q);
-
-            let html = '<div class="space-y-4">';
-            
-            q.shuffledItems.forEach((item, index) => {
+            let html = '<div class="space-y-3">';
+            q.shuffledItems.forEach((item, itemIndex) => {
                 html += `
-                    <div class="p-4 border-2 border-primary-100 rounded-xl">
+                    <div class="p-4 bg-primary-50 rounded-lg">
                         <div class="flex items-start gap-2 mb-3">
-                            <span class="font-semibold text-primary-600">${index + 1}.</span>
+                            <span class="font-semibold text-primary-600">${itemIndex + 1}.</span>
                             <span class="text-primary-800">${item.text || ''}</span>
-                            ${item.media ? renderMedia(item.media) : ''}
+                `;
+                if (item.media) {
+                    html += renderMedia(item.media);
+                }
+                html += `
                         </div>
-                        <div class="flex gap-3">
-                            <label class="tf-btn flex items-center gap-2 px-4 py-2 border-2 border-primary-100 rounded-lg cursor-pointer transition-all hover:border-primary-300">
-                                <input type="radio" name="q${qIndex}_${index}" value="true"
-                                       class="accent-primary-600"
-                                       onchange="updateTrueFalse(${qIndex}, ${index}, true)">
-                                Đúng
+                        <div class="flex gap-4 ml-5">
+                            <label class="tf-btn flex items-center gap-2 px-4 py-2 rounded-lg border-2 border-primary-200 cursor-pointer hover:border-primary-400 transition-colors">
+                                <input type="radio" name="q${qIndex}_item${itemIndex}" value="true" class="w-4 h-4 text-primary-600" onchange="handleTFAnswer(${qIndex}, ${itemIndex}, true)">
+                                <span class="font-medium">Đúng</span>
                             </label>
-                            <label class="tf-btn flex items-center gap-2 px-4 py-2 border-2 border-primary-100 rounded-lg cursor-pointer transition-all hover:border-primary-300">
-                                <input type="radio" name="q${qIndex}_${index}" value="false"
-                                       class="accent-primary-600"
-                                       onchange="updateTrueFalse(${qIndex}, ${index}, false)">
-                                Sai
+                            <label class="tf-btn flex items-center gap-2 px-4 py-2 rounded-lg border-2 border-primary-200 cursor-pointer hover:border-primary-400 transition-colors">
+                                <input type="radio" name="q${qIndex}_item${itemIndex}" value="false" class="w-4 h-4 text-primary-600" onchange="handleTFAnswer(${qIndex}, ${itemIndex}, false)">
+                                <span class="font-medium">Sai</span>
                             </label>
                         </div>
                     </div>
                 `;
             });
-            
             html += '</div>';
             return html;
         }
 
-        // Update answer
-        function updateAnswer(qIndex, choiceIndex) {
+        // Handle multiple choice answer
+        function handleMCAnswer(qIndex, choiceIndex) {
             userAnswers[qIndex] = choiceIndex;
             updateQuestionGrid(qIndex);
         }
 
-        function updateTrueFalse(qIndex, itemIndex, value) {
+        // Handle true/false answer
+        function handleTFAnswer(qIndex, itemIndex, value) {
             if (!userAnswers[qIndex]) {
                 userAnswers[qIndex] = {};
             }
             userAnswers[qIndex][itemIndex] = value;
             
+            // Check if all items answered
             const q = questions[qIndex];
             const allAnswered = q.shuffledItems.every((_, i) => 
                 userAnswers[qIndex][i] !== undefined
             );
             if (allAnswered) {
                 updateQuestionGrid(qIndex);
+            } else {
+                saveProgress();
             }
         }
 
@@ -938,6 +1329,14 @@
                         
                         // Update mobile nav
                         updateMobileNavScroll(index);
+
+                        // Update expand grid if open
+                        if (isMobileExpandOpen) {
+                            updateMobileExpandGrid();
+                        }
+
+                        // Save current position
+                        saveProgress();
                     }
                 });
             }, { threshold: 0.5 });
@@ -969,20 +1368,151 @@
         function doSubmit() {
             clearInterval(timerInterval);
             stopAllMedia();
+            
+            // Calculate actual duration
+            actualDuration = Math.floor((Date.now() - startTime) / 1000);
+            
+            // Clear localStorage
+            clearProgress();
+            
             window.scrollTo({ top: 0, behavior: 'smooth' });
             
             document.getElementById('examScreen').classList.add('hidden');
             document.getElementById('resultsScreen').classList.remove('hidden');
 
             gradeExam();
+            renderResultsSidebar();
+            renderMobileResultsNav();
+            setupResultsExpand();
+        }
+
+        // Setup results expand panel
+        function setupResultsExpand() {
+            const expandBtn = document.getElementById('mobileResultsExpandBtn');
+            const overlay = document.getElementById('mobileResultsExpandOverlay');
+            const closeBtn = document.getElementById('mobileResultsExpandClose');
+            const backdrop = document.getElementById('mobileResultsExpandBackdrop');
+
+            expandBtn.addEventListener('click', toggleMobileResultsExpand);
+            closeBtn.addEventListener('click', closeMobileResultsExpand);
+            backdrop.addEventListener('click', closeMobileResultsExpand);
+        }
+
+        function toggleMobileResultsExpand() {
+            if (isMobileResultsExpandOpen) {
+                closeMobileResultsExpand();
+            } else {
+                openMobileResultsExpand();
+            }
+        }
+
+        function openMobileResultsExpand() {
+            const overlay = document.getElementById('mobileResultsExpandOverlay');
+            const panel = document.getElementById('mobileResultsExpandPanel');
+            
+            isMobileResultsExpandOpen = true;
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex', 'flex-col');
+            panel.classList.add('expand-panel-enter');
+            overlay.classList.add('expand-overlay-enter');
+        }
+
+        function closeMobileResultsExpand() {
+            const overlay = document.getElementById('mobileResultsExpandOverlay');
+            const panel = document.getElementById('mobileResultsExpandPanel');
+            
+            isMobileResultsExpandOpen = false;
+            panel.classList.remove('expand-panel-enter');
+            panel.classList.add('expand-panel-leave');
+            overlay.classList.remove('expand-overlay-enter');
+            overlay.classList.add('expand-overlay-leave');
+            
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+                overlay.classList.remove('flex', 'flex-col', 'expand-overlay-leave');
+                panel.classList.remove('expand-panel-leave');
+            }, 300);
+        }
+
+        // Render results sidebar (desktop)
+        function renderResultsSidebar() {
+            const grid = document.getElementById('resultsQuestionGrid');
+            const expandGrid = document.getElementById('mobileResultsExpandGrid');
+            grid.innerHTML = '';
+            expandGrid.innerHTML = '';
+
+            questions.forEach((q, index) => {
+                const isCorrect = questionResults[index];
+                
+                // Desktop sidebar cell
+                const cell = document.createElement('button');
+                cell.className = `aspect-square flex items-center justify-center rounded-lg text-sm font-semibold transition-all ${isCorrect ? 'bg-success-100 text-success-600 hover:bg-success-200' : 'bg-danger-100 text-danger-600 hover:bg-danger-200'}`;
+                cell.textContent = index + 1;
+                cell.addEventListener('click', () => scrollToResult(index));
+                grid.appendChild(cell);
+
+                // Mobile expand grid cell
+                const expandCell = document.createElement('button');
+                expandCell.className = `w-9 h-9 flex items-center justify-center rounded-lg text-sm font-semibold transition-all ${isCorrect ? 'bg-success-100 text-success-600 hover:bg-success-200' : 'bg-danger-100 text-danger-600 hover:bg-danger-200'}`;
+                expandCell.textContent = index + 1;
+                expandCell.addEventListener('click', () => {
+                    scrollToResult(index);
+                    closeMobileResultsExpand();
+                });
+                expandGrid.appendChild(expandCell);
+            });
+
+            // Sidebar buttons
+            document.getElementById('sidebarReviewBtn').addEventListener('click', () => location.reload());
+        }
+
+        // Render mobile results nav (only wrong answers)
+        function renderMobileResultsNav() {
+            const nav = document.getElementById('mobileResultsNav');
+            nav.innerHTML = '';
+
+            const wrongIndices = [];
+            questions.forEach((q, index) => {
+                if (!questionResults[index]) {
+                    wrongIndices.push(index);
+                }
+            });
+
+            if (wrongIndices.length === 0) {
+                const msg = document.createElement('span');
+                msg.className = 'text-sm text-success-600 font-medium';
+                msg.textContent = '🎉 Không có câu sai nào!';
+                nav.appendChild(msg);
+            } else {
+                wrongIndices.forEach(index => {
+                    const cell = document.createElement('button');
+                    cell.className = 'flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-lg text-sm font-semibold transition-all bg-danger-100 text-danger-600 hover:bg-danger-200';
+                    cell.textContent = index + 1;
+                    cell.addEventListener('click', () => scrollToResult(index));
+                    nav.appendChild(cell);
+                });
+            }
+        }
+
+        // Scroll to result
+        function scrollToResult(index) {
+            const el = document.getElementById(`result-${index}`);
+            if (el) {
+                const topOffset = window.innerWidth < 1024 ? 100 : 20;
+                const elementPosition = el.getBoundingClientRect().top + window.pageYOffset;
+                window.scrollTo({ top: elementPosition - topOffset, behavior: 'smooth' });
+            }
         }
 
         // Grade exam
         function gradeExam() {
             let correctCount = 0;
             let totalCount = questions.length;
+            questionResults = [];
 
             questions.forEach((q, index) => {
+                let isCorrect = false;
+                
                 if (q.type === 'multiple_choice') {
                     const userAnswer = userAnswers[index];
                     if (userAnswer !== undefined) {
@@ -990,6 +1520,7 @@
                             c => c.originalKey === q.correct
                         );
                         if (userAnswer === correctIndex) {
+                            isCorrect = true;
                             correctCount++;
                         }
                     }
@@ -1009,16 +1540,21 @@
                         });
                         
                         if (allCorrect) {
+                            isCorrect = true;
                             correctCount++;
                         }
                     }
                 }
+                
+                questionResults.push(isCorrect);
             });
 
             // Display score
             const percent = Math.round(correctCount / totalCount * 100);
+            const duration = configData.exam.duration_minutes || 0;
             const scoreSummary = document.getElementById('scoreSummary');
-            scoreSummary.innerHTML = `
+            
+            let summaryHTML = `
                 <div class="bg-gradient-to-br from-primary-600 to-primary-800 text-white p-6 rounded-xl text-center">
                     <div class="text-sm opacity-90 mb-2">Điểm số</div>
                     <div class="text-5xl font-bold mb-1">${percent}%</div>
@@ -1035,9 +1571,24 @@
                             <span class="text-primary-700">Sai</span>
                             <span class="font-semibold text-danger-600">${totalCount - correctCount}</span>
                         </div>
+            `;
+            
+            // Show actual time for unlimited duration exams
+            if (duration === 0) {
+                summaryHTML += `
+                        <div class="flex justify-between pt-2 border-t border-primary-200 mt-2">
+                            <span class="text-primary-700">Thời gian làm bài</span>
+                            <span class="font-semibold text-primary-900">${formatTimeText(actualDuration)}</span>
+                        </div>
+                `;
+            }
+            
+            summaryHTML += `
                     </div>
                 </div>
             `;
+            
+            scoreSummary.innerHTML = summaryHTML;
 
             displayResults();
         }
@@ -1048,8 +1599,9 @@
             container.innerHTML = '';
 
             questions.forEach((q, index) => {
+                const isCorrect = questionResults[index];
                 const resultDiv = document.createElement('div');
-                resultDiv.className = 'bg-primary-50 p-5 rounded-xl border-l-4 border-primary-500';
+                resultDiv.className = `bg-primary-50 p-5 rounded-xl border-l-4 ${isCorrect ? 'border-success-500' : 'border-danger-500'}`;
                 resultDiv.id = `result-${index}`;
 
                 let html = `<h3 class="font-bold text-lg text-primary-900 mb-3">Câu ${index + 1}</h3>`;

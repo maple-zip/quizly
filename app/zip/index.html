@@ -266,7 +266,7 @@
                             </svg>
                         </button>
                     </div>
-                    <div id="mobileExpandGrid" class="grid grid-cols-6 gap-2">
+                    <div id="mobileExpandGrid" class="flex flex-wrap gap-2">
                         <!-- Question cells will be inserted here -->
                     </div>
                 </div>
@@ -877,7 +877,7 @@
 
             questions.forEach((q, index) => {
                 const cell = document.createElement('button');
-                cell.className = 'aspect-square flex items-center justify-center rounded-lg text-sm font-semibold transition-all bg-primary-50 text-primary-700 hover:bg-primary-100';
+                cell.className = 'w-9 h-9 flex items-center justify-center rounded-lg text-sm font-semibold transition-all bg-primary-50 text-primary-700 hover:bg-primary-100';
                 cell.textContent = index + 1;
                 cell.dataset.index = index;
                 cell.id = `expand-cell-${index}`;
